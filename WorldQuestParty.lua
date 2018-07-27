@@ -8,6 +8,7 @@ local WQchannel = nil
 local channelNum = nil
 local parties = {}
 local isRegistered = false
+local joinButtonTimer = nil
 local RegEvents = {}
 WQPFrame:SetScript("OnEvent", function(self, event, ...)
 		if (RegEvents[event]) then
@@ -22,21 +23,22 @@ end
 
 function RegEvents:CHAT_MSG_ADDON(self, prefix, msg, _, sender, channel)
 	DebugPrint(string.format("Message recieved from %s on %s - \"%s\"", sender, channel, msg))
-	if (msg == ">" and isRegistered) then
-		DebugPrint(string.format("%s entered the WQ, sending party info...", sender))
-		C_ChatInfo.SendAddonMessage("WQPartyFinder", "<", "WHISPER", sender)
-	elseif (msg == "<" and not isRegistered) then
-		DebugPrint(string.format("Recieved group info from %s", sender))
-		parties[sender] = false
-		CreateJoinButton()
-	elseif (msg == "!" and isRegistered) then
-		InviteUnit(sender)
-		DebugPrint(string.format("%s requested an invite, sending...", sender))
-	elseif msg == "?" and not isRegistered and not UnitInParty("player") then
-		if parties[sender] then
-			parties[sender] = nil
+	if DEBUG or string.find(sender, UnitName("player")) == nil then
+		if msg == ">" and (isRegistered or DEBUG) then
+			DebugPrint(string.format("%s entered the WQ, sending party info...", sender))
+			C_ChatInfo.SendAddonMessage("WQPartyFinder", "<", "WHISPER", sender)
+		elseif (msg == "<" and not isRegistered) then
+			DebugPrint(string.format("Recieved group info from %s", sender))
+			parties[sender] = false
+			CreateJoinButton()
+		elseif (msg == "!" and isRegistered) then
+			InviteUnit(sender)
+			DebugPrint(string.format("%s requested an invite, sending...", sender))
+		elseif msg == "?" and not isRegistered and not UnitInParty("player") and not DEBUG then
+			if parties[sender] then
+				parties[sender] = nil
+			end
 		end
-		CreateJoinButton()
 	end
 end
 
@@ -83,18 +85,39 @@ local function SetupRecentWQFlush()
 	end)
 end
 
-local function ButtonThrottle(button)
-	button:Disable()
-	C_Timer.NewTimer(3, function()
-		button:Enable()
+local function TimerCountdown(button, text, timeRemaining)
+	button:SetText(text.." ("..timeRemaining.."s)")
+	button:SetNormalFontObject("GameFontNormal")
+	return C_Timer.NewTimer(1, function()
+		timeRemaining = timeRemaining - 1
+		if timeRemaining > 0 then
+			TimerCountdown(button, text, timeRemaining)
+		end
 	end)
+end
+
+local function ButtonThrottle(button, duration, callback, dontEnable)
+	text = button:GetText()
+	button:Disable()
+	timer = C_Timer.NewTimer(duration, function()
+		if not dontEnable then
+			button:Enable()
+		end
+		if callback then callback() end
+	end)
+	timer.Countdown = TimerCountdown(button, text, duration)
+	return timer
+end
+
+local function CancelTimer(timer)
+	timer.Countdown:Cancel()
+	timer:Cancel()
 end
 
 local function RegisterGroup(self)
 	DebugPrint("Registering party for "..activeWQ)
 	C_ChatInfo.SendAddonMessage("WQPartyFinder", "<", "CHANNEL", channelNum)
 	isRegistered = true
-	ButtonThrottle(self)
 end
 
 local function IsRecentWQ(questID)
@@ -140,28 +163,28 @@ function WQPFrame.HookEvents()
 		DebugPrint("Join button clicked")
 		for sender, hasRequested in pairs(parties) do
 			if not hasRequested then
-				self:Disable()
+				parties[sender] = true
 				DebugPrint(string.format("Requesting invite from %s", sender))
 				C_ChatInfo.SendAddonMessage("WQPartyFinder", "!", "WHISPER", sender)
-				C_Timer.NewTimer(3, function()
-					if not UnitInParty("player") then
-						CreateJoinButton()
-						self:Enable()
-					end
-				end)
+				self:SetText("Requesting invite...")
+				joinButtonTimer = ButtonThrottle(self, 3, function()
+					self:SetText("Join failed")
+					C_Timer.NewTimer(2, function()
+						if not UnitInParty("player") then
+							CreateJoinButton()
+						end
+					end)
+				end, true)
+				
 				break
 			end
 		end
-		C_ChatInfo.SendAddonMessage("WQPartyFinder", ">", "CHANNEL", channelNum)
-		self:SetText("Requesting invite...")
-		self:SetNormalFontObject("GameFontNormal")
 	end)
 
 	WQPFrame.JoinFrame.NewParty:SetScript("OnClick", function(self)
 		WQPFrame.SetAsParty()
-		RegisterGroup(self)
-		WQPFrame.JoinFrame.ListButton:SetText("Unlist Group")
-		WQPFrame.JoinFrame.ListButton:SetNormalFontObject("GameFontNormal")
+		WQPFrame.JoinFrame.ListButton:Click()
+		if joinButtonTimer then CancelTimer(joinButtonTimer) end
 	end)
 	
 	WQPFrame.HeaderFrame.CloseButton:SetScript("OnClick", function(self)
@@ -173,32 +196,26 @@ function WQPFrame.HookEvents()
 		if isRegistered then
 			DebugPrint("Removing group from listing")
 			C_ChatInfo.SendAddonMessage("WQPartyFinder", "?", "CHANNEL", channelNum)
-			WQPFrame.JoinFrame.ListButton:SetText("List Group")
-			WQPFrame.JoinFrame.ListButton:SetNormalFontObject("GameFontNormal")
+			self:SetText("List Group")
+			ButtonThrottle(self, 3, function()
+				self:SetText("List Group")
+			end)
 			isRegistered = false
-			if UnitInParty("player") then
-				ButtonThrottle(self)
-			else
+			if not UnitInParty("player") then
 				C_ChatInfo.SendAddonMessage("WQPartyFinder", ">", "CHANNEL", channelNum)
 				WQPFrame.SetAsIndividual()
-				if (DEBUG) then
-					C_ChatInfo.SendAddonMessage("WQPartyFinder", "<", "CHANNEL", channelNum)
-				end
-				WQPFrame.JoinFrame.JoinButton:SetText("Looking for parties...")
+				WQPFrame.JoinFrame.JoinButton:SetText("Searching...")
 				WQPFrame.JoinFrame.JoinButton:SetNormalFontObject("GameFontNormal")
-				C_Timer.NewTimer(3, function()
-					currentSize = 0
-					for k, v in pairs(parties) do currentSize = currentSize + 1 end
-					if (currentSize <= 0) then
-						WQPFrame.JoinFrame.JoinButton:SetText("No parties found yet")
-						WQPFrame.JoinFrame.JoinButton:SetNormalFontObject("GameFontNormal")
-					end
+				joinButtonTimer = ButtonThrottle(WQPFrame.JoinFrame.JoinButton, 3, function()
+					CreateJoinButton()
 				end)
 			end
 		else
 			RegisterGroup(self)
-			WQPFrame.JoinFrame.ListButton:SetText("Unlist Group")
-			WQPFrame.JoinFrame.ListButton:SetNormalFontObject("GameFontNormal")
+			self:SetText("Unlist Group")
+			ButtonThrottle(self, 3, function()
+				self:SetText("Unlist Group")
+			end)
 		end
 	end)
 	
@@ -212,9 +229,8 @@ function WQPFrame.HookEvents()
 				DebugPrint("MSG: "..msg)
 				SendChatMessage("!", "WHISPER", nil, UnitName("player"))
 			end
-			self:Disable()
-			C_Timer.NewTimer(30, function()
-				WQPFrame.JoinFrame.CalloutButton:Enable()
+			ButtonThrottle(WQPFrame.JoinFrame.CalloutButton, 30, function()
+				WQPFrame.JoinFrame.CalloutButton:SetText("Post LFM")
 			end)
 		end
 	end)
@@ -246,14 +262,6 @@ function WQPFrame.SetAsIndividual()
 end
 
 local function GetChannelNumber(channelName)
-	--for i=1,GetNumDisplayChannels() do
-	--	name, _, _, num = GetChannelDisplayInfo(i)
-	--	if (name == channelName) then
-	--		DebugPrint("Channel found on channel number "..num)
-	--		channelNum = num
-	--		break
-	--	end
-	--end
 	channelNum = GetChannelName(channelName)
 end
 
@@ -270,20 +278,11 @@ function WQPFrame.EnterWQ(questID)
 		if not UnitIsGroupLeader("player") and not UnitInParty("player") and not DEBUG_AS_LEAD then
 			DebugPrint("Registering as an individual")
 			WQPFrame.SetAsIndividual()
-			--WQPFrame.JoinFrame:Show()
 			C_ChatInfo.SendAddonMessage("WQPartyFinder", ">", "CHANNEL", channelNum)
-			if (DEBUG) then
-				C_ChatInfo.SendAddonMessage("WQPartyFinder", "<", "CHANNEL", channelNum)
-			end
-			WQPFrame.JoinFrame.JoinButton:SetText("Looking for parties...")
+			WQPFrame.JoinFrame.JoinButton:SetText("Searching...")
 			WQPFrame.JoinFrame.JoinButton:SetNormalFontObject("GameFontNormal")
-			C_Timer.NewTimer(3, function()
-				currentSize = 0
-				for k, v in pairs(parties) do currentSize = currentSize + 1 end
-				if (currentSize <= 0) then
-					WQPFrame.JoinFrame.JoinButton:SetText("No parties found yet")
-					WQPFrame.JoinFrame.JoinButton:SetNormalFontObject("GameFontNormal")
-				end
+			joinButtonTimer = ButtonThrottle(WQPFrame.JoinFrame.JoinButton, 3, function(self)
+				CreateJoinButton()
 			end)
 		elseif UnitIsGroupLeader("player") or DEBUG_AS_LEAD then
 			DebugPrint("Registering as a party")
@@ -316,10 +315,17 @@ end
 
 function CreateJoinButton()
 	currentSize = 0
-	for k, v in pairs(parties) do currentSize = currentSize+1 end
-	if (currentSize == 1) then
+	for k, v in pairs(parties) do if not v then currentSize = currentSize+1 end end
+	if (currentSize == 0) then
+		WQPFrame.JoinFrame.JoinButton:SetText("No parties found yet")
+		WQPFrame.JoinFrame.JoinButton:Disable()
+	elseif (currentSize == 1) then
+		CancelTimer(joinButtonTimer)
+		WQPFrame.JoinFrame.JoinButton:Enable()
 		WQPFrame.JoinFrame.JoinButton:SetText("Join\n"..currentSize.." party found")
 	else
+		CancelTimer(joinButtonTimer)
+		WQPFrame.JoinFrame.JoinButton:Enable()
 		WQPFrame.JoinFrame.JoinButton:SetText("Join\n"..currentSize.." parties found")
 	end
 	WQPFrame.JoinFrame.JoinButton:SetNormalFontObject("GameFontNormal")

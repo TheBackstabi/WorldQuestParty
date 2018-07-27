@@ -41,6 +41,12 @@ function SetupButtonFrame(frame)
 	ptex:SetTexCoord(0, 0.625, 0, 0.6875)
 	ptex:SetAllPoints()
 	frame:SetPushedTexture(ptex)
+	
+	local dtex = frame:CreateTexture()
+	dtex:SetTexture("Interface/Buttons/UI-Panel-Button-Disabled")
+	dtex:SetTexCoord(0, 0.625, 0, 0.6875)
+	dtex:SetAllPoints()
+	frame:SetDisabledTexture(dtex)
 	return frame
 end
 
@@ -88,7 +94,7 @@ function JoinFrame_GeneralCallout()
 	WQPFrame.JoinFrame.CalloutButton:SetWidth(200)
 	WQPFrame.JoinFrame.CalloutButton:SetHeight(50)
 	SetupButtonFrame(WQPFrame.JoinFrame.CalloutButton)
-	WQPFrame.JoinFrame.CalloutButton:SetText("Callout to General")
+	WQPFrame.JoinFrame.CalloutButton:SetText("Post LFM")
 	WQPFrame.JoinFrame.CalloutButton:SetNormalFontObject("GameFontNormal")
 end
 
