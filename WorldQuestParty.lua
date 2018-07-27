@@ -1,4 +1,4 @@
-local DEBUG = false
+local DEBUG = true
 	local DEBUG_AS_LEAD = false
 
 WQPFrame = CreateFrame("Frame", "WorldQuestPartyFrame", UIParent)
@@ -20,28 +20,24 @@ function RegEvents:PLAYER_LOGIN(event)
 	WQPFrame.HookEvents()
 end
 
-function RegEvents:CHAT_MSG_ADDON(self, prefix, msg, channel, sender)
-	DebugPrint(string.format("Message recieved from %s - \"%s\"", sender, msg))
-	--local thisUser, thisRealm = UnitName("player")
-	--local thisUserFullName = thisUser.."-"..thisRealm
-	--if (sender ~= thisUserFullName) then
-		if (msg == ">" and isRegistered) then
-			DebugPrint(string.format("%s entered the WQ, sending party info...", sender))
-			C_ChatInfo.SendAddonMessage("WQPartyFinder", "<", "WHISPER", sender)
-		elseif (msg == "<" and not isRegistered) then
-			DebugPrint(string.format("Recieved group info from %s", sender))
-			parties[sender] = false
-			CreateJoinButton()
-		elseif (msg == "!" and isRegistered) then
-			InviteUnit(sender)
-			DebugPrint(string.format("%s requested an invite, sending...", sender))
-		elseif msg == "?" and not isRegistered and not UnitInParty("player") then
-			if parties[sender] then
-				parties[sender] = nil
-			end
-			CreateJoinButton()
+function RegEvents:CHAT_MSG_ADDON(self, prefix, msg, _, sender, channel)
+	DebugPrint(string.format("Message recieved from %s on %s - \"%s\"", sender, channel, msg))
+	if (msg == ">" and isRegistered) then
+		DebugPrint(string.format("%s entered the WQ, sending party info...", sender))
+		C_ChatInfo.SendAddonMessage("WQPartyFinder", "<", "WHISPER", sender)
+	elseif (msg == "<" and not isRegistered) then
+		DebugPrint(string.format("Recieved group info from %s", sender))
+		parties[sender] = false
+		CreateJoinButton()
+	elseif (msg == "!" and isRegistered) then
+		InviteUnit(sender)
+		DebugPrint(string.format("%s requested an invite, sending...", sender))
+	elseif msg == "?" and not isRegistered and not UnitInParty("player") then
+		if parties[sender] then
+			parties[sender] = nil
 		end
-	--end
+		CreateJoinButton()
+	end
 end
 
 function RegEvents:CHAT_MSG_WHISPER(event, msg, sender)
@@ -132,8 +128,8 @@ function WQPFrame.HookEvents()
 	end)
 	
 	-- Remove addon chat channels from view
-	local function FilterByChannelName(_, _, _, channel)
-		return not string.lower(channel):match("wqp")
+	local function FilterByChannelName(_, _, _, _, _, channel, _, _, test)
+		return not string.find(string.lower(channel), ("wqp")) == nil
 	end
 	ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", FilterByChannelName)
 	ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL_NOTICE", FilterByChannelName)
