@@ -1,0 +1,42 @@
+Core goals
+
+- Automated invite based on players doing the same WQ
+- Shard-locked to prevent realm hopping
+- Able to be utilized indirectly without the addon
+
+
+Necessary info
+
+- WQ ID
+
+Actions
+
+	:: - Comment on why this helps
+	// - Comment on implementation, additional features, etc
+	!! - Issues or possible roadblocks
+
+- Join(?) automation chat channel on login
+	// Need to investigate if this is truely necessary. Would prefer to keep the channel completely hidden.
+
+- Post availability on entering WQ zone
+	:: Notifies other users that this player is available
+	
+- Send acknowledgement back when other users are available for the same WQ the local user is on
+	:: Gives the newly available player a full list of those that arrived before them
+	
+- Remove availability and drop group when exiting WQ zone or on quest complete
+	:: Removes the player from other user's list
+	!! Exiting a WQ zone is an oddity - Both entering/exiting trigger the same event (ObjectiveTracker_Update, with OBJECTIVE_TRACKER_UPDATE_WORLD_QUEST_ADDED as the reason param)
+			Using a toggle implementationdoesn't work. Some WQs instantly trigger an exit, while others may not trigger an exit at all.
+			May need a manual implementation (think WQGF's "Leave group?" button) when the event fires for a previously found WQ.
+			
+- Button to post to General chat for a specific WQ
+	:: Notifies non-addon users that there is a group doing this WQ
+	// Possibly have an option to automatically make this callout when creating a group?
+	
+- Auto-invite users that whisper with a keyword
+	:: Allows for automated processing of non-addon users.
+	// Option to enable/disable would likely be a good idea.
+	// Additional settings may be nice, such as user-defined keywords, time-limit (if any).
+	// Bonus - allowing anyone to be whispered in the group. If they have the addon, they can automate the invite by sending an addon message for the group lead to catch.
+			removes the need to pass around group lead/raid assistant permissions when making fully manual invites.
