@@ -1,4 +1,4 @@
-local DEBUG = true
+local DEBUG = false
 	local DEBUG_AS_LEAD = false
 
 WQPFrame = CreateFrame("Frame", "WorldQuestPartyFrame", UIParent)
