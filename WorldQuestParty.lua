@@ -114,7 +114,9 @@ end
 function RegEvents:QUEST_TURNED_IN(event, questID, experience, money)
 	if activeWQ and questID == activeWQ then
 		WQPFrame.ExitWQ()
-		StaticPopup_Show("WQP_LEAVEPARTY")
+		if UnitInParty("player") then
+			StaticPopup_Show("WQP_LEAVEPARTY")
+		end
 	end
 end
 
@@ -181,7 +183,7 @@ function WQPFrame.HookEvents()
 				WQPFrame.ExitWQ()
 			end
 			DebugPrint(string.format("Entering WQ zone for %s", questID))
-			if not IsRecentWQ(questID) then
+			if not IsRecentWQ(questID) and not UnitIsDeadOrGhost("player") then
 				WQchannel = "WQP"..questID
 				if C_PvP.IsWarModeActive() then
 					WQchannel = WQchannel.."PVP"
