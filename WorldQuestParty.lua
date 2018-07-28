@@ -79,8 +79,8 @@ function RegEvents:CHAT_MSG_ADDON(self, prefix, msg, _, sender, channel)
 end
 
 function RegEvents:CHAT_MSG_WHISPER(event, msg, sender)
-	DebugPrint("Whisper recieved")
-	if isRegistered and (msg == "!" or msg == "\"!\"") then
+	msg = string.lower(msg)
+	if isRegistered and (msg == "wq" or msg == "\"wq\"") then
 		DebugPrint("Inviting "..sender)
 		InviteUnit(sender)
 	end
@@ -121,17 +121,20 @@ function RegEvents:QUEST_TURNED_IN(event, questID, experience, money)
 end
 
 function RegEvents:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
-	WQs = C_TaskQuest.GetQuestsForPlayerByMapID(C_Map.GetBestMapForUnit("player"))
-	for k in pairs(WQs) do
-		if (C_QuestLog.IsOnQuest(WQs[k]["questId"])) then
-			WQchannel = "WQP"..WQs[k]["questId"]
-			if C_PvP.IsWarModeActive() then
-				WQchannel = WQchannel.."PVP"
+	uiMapId = C_Map.GetBestMapForUnit("player")
+	if uiMapId then
+		WQs = C_TaskQuest.GetQuestsForPlayerByMapID(uiMapId)
+		for k in pairs(WQs) do
+			if (C_QuestLog.IsOnQuest(WQs[k]["questId"])) then
+				WQchannel = "WQP"..WQs[k]["questId"]
+				if C_PvP.IsWarModeActive() then
+					WQchannel = WQchannel.."PVP"
+				end
+				JoinChannelByName(WQchannel)
+				C_Timer.NewTimer(1, function()
+					WQPFrame.EnterWQ(WQs[k]["questId"])
+				end)
 			end
-			JoinChannelByName(WQchannel)
-			C_Timer.NewTimer(1, function()
-				WQPFrame.EnterWQ(WQs[k]["questId"])
-			end)
 		end
 	end
 end
@@ -284,12 +287,12 @@ function WQPFrame.HookEvents()
 	WQPFrame.JoinFrame.CalloutButton:SetScript("OnClick", function(self)
 		if isRegistered then
 			questName = C_TaskQuest.GetQuestInfoByQuestID(activeWQ)
-			msg = "WorldQuestParty - Whisper me \"!\" for invite to World Quest \""..questName.."\""
+			msg = "LFM \124cffffff00\124Hquest:"..activeWQ..":110\124h["..questName.."]\124h\124r - whisper me \"wq\" for an invite! [World Quest Party]"
 			if not DEBUG then
 				SendChatMessage(msg, "CHANNEL", nil, 1)
 			else
 				DebugPrint("MSG: "..msg)
-				SendChatMessage("!", "WHISPER", nil, UnitName("player"))
+				SendChatMessage("wq", "WHISPER", nil, UnitName("player"))
 			end
 			ButtonThrottle(WQPFrame.JoinFrame.CalloutButton, 30, function()
 				WQPFrame.JoinFrame.CalloutButton:SetText("Post LFM")
