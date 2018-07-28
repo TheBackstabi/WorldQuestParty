@@ -108,6 +108,16 @@ function HeaderFrame_MinimizeButton()
 	WQPFrame.HeaderFrame.MinimizeButton:SetNormalFontObject("GameFontNormal")
 end
 
+function JoinFrame_LeaveParty()
+	WQPFrame.JoinFrame.LeaveButton = CreateFrame("Button", "WQPLeave", WQPFrame.JoinFrame)
+	WQPFrame.JoinFrame.LeaveButton:SetPoint("TOP", WQPFrame.JoinFrame, "TOP", 0, -65)
+	WQPFrame.JoinFrame.LeaveButton:SetWidth(200)
+	WQPFrame.JoinFrame.LeaveButton:SetHeight(50)
+	SetupButtonFrame(WQPFrame.JoinFrame.LeaveButton)
+	WQPFrame.JoinFrame.LeaveButton:SetText("Leave Party")
+	WQPFrame.JoinFrame.LeaveButton:SetNormalFontObject("GameFontNormal")
+end
+
 function WQPFrame.CreateSubFrames()
 	DebugPrint("Creating Frames...")
 	SetFrameAnchors()
@@ -128,6 +138,7 @@ function WQPFrame.CreateSubFrames()
 	JoinFrame_CreateParty()
 	JoinFrame_GeneralCallout()
 	HeaderFrame_MinimizeButton()
+	JoinFrame_LeaveParty()
 	
 	WQPFrame:Hide()
 end

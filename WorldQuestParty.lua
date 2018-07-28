@@ -1,5 +1,6 @@
 local DEBUG = false
 	local DEBUG_AS_LEAD = false
+	local DEBUG_AS_MEMBER = false
 
 WQPFrame = CreateFrame("Frame", "WorldQuestPartyFrame", UIParent)
 local activeWQ = nil
@@ -9,12 +10,25 @@ local channelNum = nil
 local parties = {}
 local isRegistered = false
 local joinButtonTimer = nil
+StaticPopupDialogs["WQP_LEAVEPARTY"] = {
+	text = "Leave party?",
+	button1 = "Yes",
+	button2 = "No",
+	OnAccept = function()
+		LeaveParty()
+	end,
+	timeout = 0,
+	whileDead = true,
+	hideOnEscape = false,
+	preferredIndex = 11,
+}
+
 local RegEvents = {}
 WQPFrame:SetScript("OnEvent", function(self, event, ...)
-		if (RegEvents[event]) then
-			return RegEvents[event](self, event, ...)
-		end
-	end)
+	if (RegEvents[event]) then
+		return RegEvents[event](self, event, ...)
+	end
+end)
 	
 function RegEvents:PLAYER_LOGIN(event)
 	WQPFrame.CreateSubFrames()
@@ -27,16 +41,38 @@ function RegEvents:CHAT_MSG_ADDON(self, prefix, msg, _, sender, channel)
 		if msg == ">" and (isRegistered or DEBUG) then
 			DebugPrint(string.format("%s entered the WQ, sending party info...", sender))
 			C_ChatInfo.SendAddonMessage("WQPartyFinder", "<", "WHISPER", sender)
-		elseif (msg == "<" and not isRegistered) then
+		elseif msg == "<" then
 			DebugPrint(string.format("Recieved group info from %s", sender))
-			parties[sender] = false
-			CreateJoinButton()
+			if not isRegistered and not (UnitInParty("player") or DEBUG_AS_MEMBER) then
+				parties[sender] = false
+				CreateJoinButton()
+			else
+				if (UnitInParty(sender) and UnitIsGroupLeader(sender)) or DEBUG_AS_MEMBER then
+					DebugPrint("Your party was listed by the party leader")
+					WQPFrame.JoinFrame.ListButton:SetText("Party Enlisted")
+				end
+			end
 		elseif (msg == "!" and isRegistered) then
 			InviteUnit(sender)
 			DebugPrint(string.format("%s requested an invite, sending...", sender))
-		elseif msg == "?" and not isRegistered and not UnitInParty("player") and not DEBUG then
-			if parties[sender] then
-				parties[sender] = nil
+		elseif msg == "?" then
+			if not isRegistered and not (UnitInParty("player") or DEBUG_AS_MEMBER) and not DEBUG then
+				DebugPrint("Removing "..sender.."'s party from table")
+				if parties[sender] then
+					parties[sender] = nil
+				end
+			else
+				if (UnitInParty(sender) and UnitIsGroupLeader(sender)) or DEBUG_AS_MEMBER then
+					DebugPrint("Your party was delisted by the party leader")
+					WQPFrame.JoinFrame.ListButton:SetText("Party Delisted")
+				end
+			end
+		elseif msg == "@" and UnitIsGroupLeader("player") then
+			DebugPrint(sender.." in party requested list status")
+			if isRegistered then
+				C_ChatInfo.SendAddonMessage("WQPartyFinder", "<", "PARTY")
+			else
+				C_ChatInfo.SendAddonMessage("WQPartyFinder", "?", "PARTY")
 			end
 		end
 	end
@@ -57,8 +93,9 @@ function RegEvents:CHAT_MSG_CHANNEL_JOIN(_, player, _, channel)
 end
 
 function RegEvents:GROUP_ROSTER_UPDATE(self)
-	if (activeWQ) then
-		if (UnitIsGroupLeader("player")) then
+	if activeWQ and UnitInParty("player") then
+		if (UnitIsGroupLeader("player") and not DEBUG_AS_MEMBER) then
+			WQPFrame.SetAsParty(true)
 			maxPartySize = 5
 			if (IsInRaid("player")) then
 				maxPartySize = 40
@@ -69,8 +106,15 @@ function RegEvents:GROUP_ROSTER_UPDATE(self)
 				C_ChatInfo.SendAddonMessage("WQPartyFinder", "<", "CHANNEL", channelNum)
 			end
 		else
-			WQPFrame:Hide()
+			WQPFrame.SetAsParty(false)
 		end
+	end
+end
+
+function RegEvents:QUEST_TURNED_IN(event, questID, experience, money)
+	if activeWQ and questID == activeWQ then
+		WQPFrame.ExitWQ()
+		StaticPopup_Show("WQP_LEAVEPARTY")
 	end
 end
 
@@ -182,7 +226,7 @@ function WQPFrame.HookEvents()
 	end)
 
 	WQPFrame.JoinFrame.NewParty:SetScript("OnClick", function(self)
-		WQPFrame.SetAsParty()
+		WQPFrame.SetAsParty(true)
 		WQPFrame.JoinFrame.ListButton:Click()
 		if joinButtonTimer then CancelTimer(joinButtonTimer) end
 	end)
@@ -244,14 +288,36 @@ function WQPFrame.HookEvents()
 		end
 	end)
 	
+	WQPFrame.JoinFrame.LeaveButton:SetScript("OnClick", function(self)
+		DebugPrint("Leaving the party")
+		LeaveParty()
+		WQPFrame.SetAsIndividual()
+		C_ChatInfo.SendAddonMessage("WQPartyFinder", ">", "CHANNEL", channelNum)
+		WQPFrame.JoinFrame.JoinButton:SetText("Searching...")
+		WQPFrame.JoinFrame.JoinButton:SetNormalFontObject("GameFontNormal")
+		joinButtonTimer = ButtonThrottle(WQPFrame.JoinFrame.JoinButton, 3, function(self)
+			CreateJoinButton()
+		end)
+	end)
+	
 	SetupRecentWQFlush()
 end
 
-function WQPFrame.SetAsParty()
+function WQPFrame.SetAsParty(isLeader)
 	WQPFrame.JoinFrame.JoinButton:Hide()
 	WQPFrame.JoinFrame.ListButton:Show()
 	WQPFrame.JoinFrame.NewParty:Hide()
-	WQPFrame.JoinFrame.CalloutButton:Show()
+	if isLeader then
+		WQPFrame.JoinFrame.CalloutButton:Show()
+		WQPFrame.JoinFrame.LeaveButton:Hide()
+		WQPFrame.JoinFrame.ListButton:Enable()
+	else
+		WQPFrame.JoinFrame.CalloutButton:Hide()
+		WQPFrame.JoinFrame.LeaveButton:Show()
+		WQPFrame.JoinFrame.ListButton:Disable()
+		WQPFrame.JoinFrame.ListButton:SetText("Waiting...")
+		C_ChatInfo.SendAddonMessage("WQPartyFinder", "@", "PARTY")
+	end
 end
 
 function WQPFrame.SetAsIndividual()
@@ -259,10 +325,30 @@ function WQPFrame.SetAsIndividual()
 	WQPFrame.JoinFrame.ListButton:Hide()
 	WQPFrame.JoinFrame.NewParty:Show()
 	WQPFrame.JoinFrame.CalloutButton:Hide()
+	WQPFrame.JoinFrame.LeaveButton:Hide()
 end
 
 local function GetChannelNumber(channelName)
 	channelNum = GetChannelName(channelName)
+end
+
+local function BuildPartyMemberTest(isListed)
+	if isListed == nil then
+		isListed = false
+		C_Timer.NewTimer(1, function()
+			BuildPartyMemberTest(isListed)
+		end)
+	end
+	if not isListed then
+		C_ChatInfo.SendAddonMessage("WQPartyFinder", "<", "WHISPER", UnitName("player"))
+		isListed = true
+	else
+		C_ChatInfo.SendAddonMessage("WQPartyFinder", "?", "WHISPER", UnitName("player"))
+		isListed = false
+	end
+	joinButtonTimer = C_Timer.NewTimer(3, function()
+		BuildPartyMemberTest(isListed)
+	end)
 end
 
 function WQPFrame.EnterWQ(questID)
@@ -275,7 +361,7 @@ function WQPFrame.EnterWQ(questID)
 		end
 		DebugPrint(string.format("Joining channel for %s", questID))
 		GetChannelNumber(WQchannel)
-		if not UnitIsGroupLeader("player") and not UnitInParty("player") and not DEBUG_AS_LEAD then
+		if not UnitIsGroupLeader("player") and not UnitInParty("player") and not DEBUG_AS_LEAD and not DEBUG_AS_MEMBER then
 			DebugPrint("Registering as an individual")
 			WQPFrame.SetAsIndividual()
 			C_ChatInfo.SendAddonMessage("WQPartyFinder", ">", "CHANNEL", channelNum)
@@ -285,9 +371,14 @@ function WQPFrame.EnterWQ(questID)
 				CreateJoinButton()
 			end)
 		elseif UnitIsGroupLeader("player") or DEBUG_AS_LEAD then
-			DebugPrint("Registering as a party")
-			WQPFrame.SetAsParty()
+			DebugPrint("Registering as a party leader")
+			WQPFrame.SetAsParty(true)
 			WQPFrame:Show()
+		elseif UnitInParty("player") or DEBUG_AS_MEMBER then
+			DebugPrint("Registering as a party member")
+			WQPFrame.SetAsParty(false)
+			WQPFrame:Show()
+			BuildPartyMemberTest()
 		end
 	end
 end
