@@ -120,6 +120,22 @@ function RegEvents:QUEST_TURNED_IN(event, questID, experience, money)
 	end
 end
 
+function RegEvents:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
+	WQs = C_TaskQuest.GetQuestsForPlayerByMapID(C_Map.GetBestMapForUnit("player"))
+	for k in pairs(WQs) do
+		if (C_QuestLog.IsOnQuest(WQs[k]["questId"])) then
+			WQchannel = "WQP"..WQs[k]["questId"]
+			if C_PvP.IsWarModeActive() then
+				WQchannel = WQchannel.."PVP"
+			end
+			JoinChannelByName(WQchannel)
+			C_Timer.NewTimer(1, function()
+				WQPFrame.EnterWQ(WQs[k]["questId"])
+			end)
+		end
+	end
+end
+
 for k, v in pairs(RegEvents) do
 	WQPFrame:RegisterEvent(k)
 end
