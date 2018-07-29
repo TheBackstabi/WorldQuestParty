@@ -113,10 +113,11 @@ end
 
 function RegEvents:QUEST_TURNED_IN(event, questID, experience, money)
 	if activeWQ and questID == activeWQ then
-		WQPFrame.ExitWQ()
 		if UnitInParty("player") then
+			C_ChatInfo.SendChatMessage("[World Quest Party] I’ve completed the wq, |cffffff00|Hquest:"..activeWQ..":110|r, thanks for your help!", "PARTY")
 			StaticPopup_Show("WQP_LEAVEPARTY")
 		end
+		WQPFrame.ExitWQ()
 	end
 end
 
@@ -249,6 +250,7 @@ function WQPFrame.HookEvents()
 	WQPFrame.JoinFrame.NewParty:SetScript("OnClick", function(self)
 		WQPFrame.SetAsParty(true)
 		WQPFrame.JoinFrame.ListButton:Click()
+		WQPFrame.JoinFrame.CalloutButton:Click()
 		if joinButtonTimer then CancelTimer(joinButtonTimer) end
 	end)
 	
@@ -288,8 +290,10 @@ function WQPFrame.HookEvents()
 		if isRegistered then
 			questName = C_TaskQuest.GetQuestInfoByQuestID(activeWQ)
 			msg = "LFM \124cffffff00\124Hquest:"..activeWQ..":110\124h["..questName.."]\124h\124r - whisper me \"wq\" for an invite! [World Quest Party]"
+			generalChannelNum = GetChannelName("General - "..GetZoneText())
+			print(generalChannelNum)
 			if not DEBUG then
-				SendChatMessage(msg, "CHANNEL", nil, 1)
+				SendChatMessage(msg, "CHANNEL", nil, generalChannelNum)
 			else
 				DebugPrint("MSG: "..msg)
 				SendChatMessage("wq", "WHISPER", nil, UnitName("player"))
@@ -451,10 +455,12 @@ SlashCmdList["WQP"] = function(msg)
 	msg = string.lower(msg)
 	if (msg == "leave" or msg == "exit" or msg == "e") then
 		WQPFrame.ExitWQ()
-	elseif (msg == "flush" or msg == "f") then
+	elseif (msg == "flush" or msg == "f" or msg == "r" or msg == "reset") then
 		recentWQ = {}
 		print("WQP: Flushed all recent world quests!")
 	elseif (msg == "debug") then
 		DEBUG = true
+	else
+		print("WQP Commands:\n\tflush\n\treset - Clear the recent WQ list\n\tleave\n\texit - Exit the current WQ")
 	end
 end 
