@@ -1,6 +1,6 @@
 ## Interface: 80000
 ## Title: World Quest Party
-## Notes: A helpful interface for creating and joining World Quest groups
+## Notes: Create or Join world quest groups with a single click!
 ## Version: 8.0.1:0
 ## SavedVariables: JoinFrameLocation
 WorldQuestParty.lua
