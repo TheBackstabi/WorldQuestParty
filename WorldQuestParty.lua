@@ -129,7 +129,7 @@ function RegEvents:QUEST_TURNED_IN(event, questID, experience, money)
 	if activeWQ and questID == activeWQ then
 		if UnitInParty("player") or UnitIsGroupLeader("player") then
 			questLink = GetQuestLink(activeWQ)
-			C_ChatInfo.SendChatMessage("I’ve completed the "..questLink.." WQ. Thanks for your help! (World Quest Party)", "PARTY")
+			SendChatMessage("I’ve completed the "..questLink.." WQ. Thanks for your help! (World Quest Party)", "PARTY")
 			StaticPopup_Show("WQP_LEAVEPARTY")
 		end
 		WQPFrame.ExitWQ()
