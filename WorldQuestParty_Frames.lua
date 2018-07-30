@@ -74,7 +74,7 @@ function JoinFrame_CreateParty()
 	WQPFrame.JoinFrame.NewParty:SetWidth(200)
 	WQPFrame.JoinFrame.NewParty:SetHeight(50)
 	SetupButtonFrame(WQPFrame.JoinFrame.NewParty)
-	WQPFrame.JoinFrame.NewParty:SetText("Create new party")
+	WQPFrame.JoinFrame.NewParty:SetText("Create Party")
 	WQPFrame.JoinFrame.NewParty:SetNormalFontObject("GameFontNormal")
 end
 
@@ -84,7 +84,7 @@ function JoinFrame_ListButton()
 	WQPFrame.JoinFrame.ListButton:SetWidth(200)
 	WQPFrame.JoinFrame.ListButton:SetHeight(50)
 	SetupButtonFrame(WQPFrame.JoinFrame.ListButton)
-	WQPFrame.JoinFrame.ListButton:SetText("List Group")
+	WQPFrame.JoinFrame.ListButton:SetText("Enlist Party")
 	WQPFrame.JoinFrame.ListButton:SetNormalFontObject("GameFontNormal")
 end
 

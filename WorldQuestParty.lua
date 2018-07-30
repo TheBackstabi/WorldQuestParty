@@ -46,13 +46,13 @@ local function GetUnitGroupIndex(name)
 end
 
 function RegEvents:CHAT_MSG_ADDON(self, prefix, msg, _, sender, channel)
-	DebugPrint(string.format("Message recieved from %s on %s - \"%s\"", sender, channel, msg))
+	DebugPrint(string.format("Message received from %s on %s - \"%s\"", sender, channel, msg))
 	if DEBUG or string.find(sender, UnitName("player")) == nil then
 		if msg == ">" and (isRegistered or DEBUG) then
 			DebugPrint(string.format("%s entered the WQ, sending party info...", sender))
 			C_ChatInfo.SendAddonMessage("WQPartyFinder", "<", "WHISPER", sender)
 		elseif msg == "<" then
-			DebugPrint(string.format("Recieved group info from %s", sender))
+			DebugPrint(string.format("Received group info from %s", sender))
 			if not isRegistered and not (UnitInParty("player") or DEBUG_AS_MEMBER) then
 				parties[sender] = false
 				CreateJoinButton()
@@ -60,7 +60,7 @@ function RegEvents:CHAT_MSG_ADDON(self, prefix, msg, _, sender, channel)
 				index = GetUnitGroupIndex(sender)
 				if (index and UnitIsGroupLeader(index)) or DEBUG_AS_MEMBER then
 					DebugPrint("Your party was listed by the party leader")
-					WQPFrame.JoinFrame.ListButton:SetText("Party Enlisted")
+					WQPFrame.JoinFrame.ListButton:SetText("Party Listed...")
 					isRegistered = true
 				end
 			end
@@ -75,7 +75,7 @@ function RegEvents:CHAT_MSG_ADDON(self, prefix, msg, _, sender, channel)
 				index = GetUnitGroupIndex(sender)
 				if (index and UnitIsGroupLeader(index)) or DEBUG_AS_MEMBER then
 					DebugPrint("Your party was delisted by the party leader")
-					WQPFrame.JoinFrame.ListButton:SetText("Party Delisted")
+					WQPFrame.JoinFrame.ListButton:SetText("Party Not Listed...")
 					isRegistered = false
 				end
 			end
@@ -129,7 +129,7 @@ function RegEvents:QUEST_TURNED_IN(event, questID, experience, money)
 	if activeWQ and questID == activeWQ then
 		if UnitInParty("player") or UnitIsGroupLeader("player") then
 			questLink = GetQuestLink(activeWQ)
-			C_ChatInfo.SendChatMessage("I’ve completed the wq, "..questLink..", thanks for your help! [World Quest Party]", "PARTY")
+			C_ChatInfo.SendChatMessage("I’ve completed the "..questLink.." WQ. Thanks for your help! (World Quest Party)", "PARTY")
 			StaticPopup_Show("WQP_LEAVEPARTY")
 		end
 		WQPFrame.ExitWQ()
@@ -251,9 +251,9 @@ function WQPFrame.HookEvents()
 				parties[sender] = true
 				DebugPrint(string.format("Requesting invite from %s", sender))
 				C_ChatInfo.SendAddonMessage("WQPartyFinder", "!", "WHISPER", sender)
-				self:SetText("Requesting invite...")
+				self:SetText("Requesting Invite...")
 				joinButtonTimer = ButtonThrottle(self, 3, function()
-					self:SetText("Join failed")
+					self:SetText("Join Failed")
 					C_Timer.NewTimer(2, function()
 						if not UnitInParty("player") then
 							CreateJoinButton()
@@ -282,9 +282,9 @@ function WQPFrame.HookEvents()
 		if isRegistered then
 			DebugPrint("Removing group from listing")
 			C_ChatInfo.SendAddonMessage("WQPartyFinder", "?", "CHANNEL", channelNum)
-			self:SetText("List Group")
+			self:SetText("Enlist Party")
 			ButtonThrottle(self, 3, function()
-				self:SetText("List Group")
+				self:SetText("Enlist Party")
 			end)
 			isRegistered = false
 			if not UnitInParty("player") then
@@ -298,9 +298,9 @@ function WQPFrame.HookEvents()
 			end
 		else
 			RegisterGroup(self)
-			self:SetText("Unlist Group")
+			self:SetText("Delist Party")
 			ButtonThrottle(self, 3, function()
-				self:SetText("Unlist Group")
+				self:SetText("Delist Party")
 			end)
 		end
 	end)
@@ -309,7 +309,7 @@ function WQPFrame.HookEvents()
 		if isRegistered then
 			questName = C_TaskQuest.GetQuestInfoByQuestID(activeWQ)
 			questLink = GetQuestLink(activeWQ)
-			msg = "LFM "..questLink.." - whisper me \"wq\" for an invite! [World Quest Party]"
+			msg = "LFM "..questLink.." WQ - whisper me \"wq\" for an invite! (World Quest Party)"
 			generalChannelNum = GetChannelName("General - "..GetZoneText())
 			if not DEBUG then
 				SendChatMessage(msg, "CHANNEL", nil, generalChannelNum)
@@ -426,7 +426,7 @@ end
 
 local function ResetButtons()
 	WQPFrame.SetAsIndividual()
-	WQPFrame.JoinFrame.ListButton:SetText("List Group")
+	WQPFrame.JoinFrame.ListButton:SetText("Enlist Party")
 end
 
 function WQPFrame.ExitWQ()
@@ -455,16 +455,16 @@ function CreateJoinButton()
 	currentSize = 0
 	for k, v in pairs(parties) do if not v then currentSize = currentSize+1 end end
 	if (currentSize == 0) then
-		WQPFrame.JoinFrame.JoinButton:SetText("No parties found yet")
+		WQPFrame.JoinFrame.JoinButton:SetText("No Parties Found")
 		WQPFrame.JoinFrame.JoinButton:Disable()
 	elseif (currentSize == 1) then
 		CancelTimer(joinButtonTimer)
 		WQPFrame.JoinFrame.JoinButton:Enable()
-		WQPFrame.JoinFrame.JoinButton:SetText("Join\n"..currentSize.." party found")
+		WQPFrame.JoinFrame.JoinButton:SetText("Join Party ("..currentSize..")")
 	else
 		CancelTimer(joinButtonTimer)
 		WQPFrame.JoinFrame.JoinButton:Enable()
-		WQPFrame.JoinFrame.JoinButton:SetText("Join\n"..currentSize.." parties found")
+		WQPFrame.JoinFrame.JoinButton:SetText("Join Party ("..currentSize..")")
 	end
 	WQPFrame.JoinFrame.JoinButton:SetNormalFontObject("GameFontNormal")
 	WQPFrame.JoinFrame.JoinButton:Show()
