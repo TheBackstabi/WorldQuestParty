@@ -92,7 +92,7 @@ end
 
 function RegEvents:CHAT_MSG_WHISPER(event, msg, sender)
 	msg = string.lower(msg)
-	if isRegistered and (msg == "wq" or msg == "\"wq\"") then
+	if isRegistered and (msg == "wq" or msg == "\"wq\"" or msg:match("inv")) then
 		DebugPrint("Inviting "..sender)
 		InviteUnit(sender)
 	end
@@ -114,8 +114,10 @@ function RegEvents:GROUP_ROSTER_UPDATE(self)
 			end
 			if (GetNumGroupMembers() == maxPartySize) then
 				C_ChatInfo.SendAddonMessage("WQPartyFinder", "?", "CHANNEL", channelNum)
+				C_ChatInfo.SendAddonMessage("WQPartyFinder", "?", "PARTY")
 			else
 				C_ChatInfo.SendAddonMessage("WQPartyFinder", "<", "CHANNEL", channelNum)
+				C_ChatInfo.SendAddonMessage("WQPartyFinder", "<", "PARTY")
 			end
 		else
 			WQPFrame.SetAsParty(false)
