@@ -1,5 +1,5 @@
-local DEBUG = false
-	local DEBUG_AS_LEAD = false
+local DEBUG = true
+	local DEBUG_AS_LEAD = true
 	local DEBUG_AS_MEMBER = false
 
 WQPFrame = CreateFrame("Frame", "WorldQuestPartyFrame", UIParent)
@@ -35,6 +35,16 @@ function RegEvents:PLAYER_LOGIN(event)
 	WQPFrame.HookEvents()
 end
 
+local function GetUnitGroupIndex(name)
+	for i=1,4 do
+		if (UnitName("party"..i) == name) then return "party"..i end
+	end
+	for i=1,40 do
+		if (UnitName("raid"..i) == name) then return "raid"..i end
+	end
+	return false
+end
+
 function RegEvents:CHAT_MSG_ADDON(self, prefix, msg, _, sender, channel)
 	DebugPrint(string.format("Message recieved from %s on %s - \"%s\"", sender, channel, msg))
 	if DEBUG or string.find(sender, UnitName("player")) == nil then
@@ -47,24 +57,26 @@ function RegEvents:CHAT_MSG_ADDON(self, prefix, msg, _, sender, channel)
 				parties[sender] = false
 				CreateJoinButton()
 			else
-				if (UnitInParty(sender) and UnitIsGroupLeader(sender)) or DEBUG_AS_MEMBER then
+				index = GetUnitGroupIndex(sender)
+				if (index and UnitIsGroupLeader(index)) or DEBUG_AS_MEMBER then
 					DebugPrint("Your party was listed by the party leader")
 					WQPFrame.JoinFrame.ListButton:SetText("Party Enlisted")
+					isRegistered = true
 				end
 			end
 		elseif (msg == "!" and isRegistered) then
 			InviteUnit(sender)
 			DebugPrint(string.format("%s requested an invite, sending...", sender))
 		elseif msg == "?" then
-			if not isRegistered and not (UnitInParty("player") or DEBUG_AS_MEMBER) and not DEBUG then
+			if not isRegistered and (UnitInParty("player") == false or DEBUG_AS_MEMBER == true) and not DEBUG then
 				DebugPrint("Removing "..sender.."'s party from table")
-				if parties[sender] then
-					parties[sender] = nil
-				end
+				parties[sender] = nil
 			else
-				if (UnitInParty(sender) and UnitIsGroupLeader(sender)) or DEBUG_AS_MEMBER then
+				index = GetUnitGroupIndex(sender)
+				if (index and UnitIsGroupLeader(index)) or DEBUG_AS_MEMBER then
 					DebugPrint("Your party was delisted by the party leader")
 					WQPFrame.JoinFrame.ListButton:SetText("Party Delisted")
+					isRegistered = false
 				end
 			end
 		elseif msg == "@" and UnitIsGroupLeader("player") then
@@ -108,12 +120,14 @@ function RegEvents:GROUP_ROSTER_UPDATE(self)
 		else
 			WQPFrame.SetAsParty(false)
 		end
+	elseif activeWQ then
+		WQPFrame.SetAsIndividual()
 	end
 end
 
 function RegEvents:QUEST_TURNED_IN(event, questID, experience, money)
 	if activeWQ and questID == activeWQ then
-		if UnitInParty("player") then
+		if UnitInParty("player") or UnitIsGroupLeader("player") then
 			questLink = GetQuestLink(activeWQ)
 			C_ChatInfo.SendChatMessage("I’ve completed the wq, "..questLink..", thanks for your help! [World Quest Party]", "PARTY")
 			StaticPopup_Show("WQP_LEAVEPARTY")
@@ -122,7 +136,7 @@ function RegEvents:QUEST_TURNED_IN(event, questID, experience, money)
 	end
 end
 
-function RegEvents:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
+local function CheckIfCurrentLocIsWQ()
 	uiMapId = C_Map.GetBestMapForUnit("player")
 	if uiMapId then
 		WQs = C_TaskQuest.GetQuestsForPlayerByMapID(uiMapId)
@@ -139,6 +153,10 @@ function RegEvents:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
 			end
 		end
 	end
+end
+
+function RegEvents:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
+	CheckIfCurrentLocIsWQ()
 end
 
 for k, v in pairs(RegEvents) do
@@ -199,7 +217,7 @@ end
 function WQPFrame.HookEvents()
 	C_ChatInfo.RegisterAddonMessagePrefix("WQPartyFinder")
 	hooksecurefunc("ObjectiveTracker_Update", function(reason, questID)
-		if (activeWQ ~= questID and reason == OBJECTIVE_TRACKER_UPDATE_WORLD_QUEST_ADDED) then
+		if (isRegistered == false and activeWQ ~= questID and reason == OBJECTIVE_TRACKER_UPDATE_WORLD_QUEST_ADDED) then
 			if (activeWQ) then
 				WQPFrame.ExitWQ()
 			end
@@ -218,7 +236,7 @@ function WQPFrame.HookEvents()
 	end)
 	
 	-- Remove addon chat channels from view
-	local function FilterByChannelName(_, _, _, _, _, channel, _, _, test)
+	local function FilterByChannelName(_, _, _, _, _, channel)
 		return not string.find(string.lower(channel), ("wqp")) == nil
 	end
 	ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", FilterByChannelName)
@@ -381,10 +399,7 @@ function WQPFrame.EnterWQ(questID)
 	if not IsRecentWQ(questID) then
 		WQPFrame:Show()
 		activeWQ = questID
-		WQPFrame.HeaderFrame.Text:SetText(string.sub(C_TaskQuest.GetQuestInfoByQuestID(activeWQ), 1, 30))
-		if DEBUG then
-			WQPFrame.HeaderFrame.Text:SetText(string.sub("THIS IS A SUPER LONG QUEST TITLE AAAAAAAAAAAAAAAAA", 1, 20).."...")
-		end
+		WQPFrame.HeaderFrame.Text:SetText(string.sub(C_TaskQuest.GetQuestInfoByQuestID(activeWQ), 1, 20))
 		DebugPrint(string.format("Joining channel for %s", questID))
 		GetChannelNumber(WQchannel)
 		if not UnitIsGroupLeader("player") and not UnitInParty("player") and not DEBUG_AS_LEAD and not DEBUG_AS_MEMBER then
@@ -409,6 +424,11 @@ function WQPFrame.EnterWQ(questID)
 	end
 end
 
+local function ResetButtons()
+	WQPFrame.SetAsIndividual()
+	WQPFrame.JoinFrame.ListButton:SetText("List Group")
+end
+
 function WQPFrame.ExitWQ()
 	if (activeWQ ~= nil) then
 		DebugPrint(string.format("Exiting WQ %s", activeWQ))
@@ -420,6 +440,7 @@ function WQPFrame.ExitWQ()
 		channelNum = nil
 		parties = {}
 		isRegistered = false
+		ResetButtons()
 		WQPFrame:Hide()
 	end
 end
