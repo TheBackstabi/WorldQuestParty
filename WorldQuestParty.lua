@@ -114,7 +114,8 @@ end
 function RegEvents:QUEST_TURNED_IN(event, questID, experience, money)
 	if activeWQ and questID == activeWQ then
 		if UnitInParty("player") then
-			C_ChatInfo.SendChatMessage("[World Quest Party] I’ve completed the wq, |cffffff00|Hquest:"..activeWQ..":110|r, thanks for your help!", "PARTY")
+			questLink = GetQuestLink(activeWQ)
+			C_ChatInfo.SendChatMessage("I’ve completed the wq, "..questLink..", thanks for your help! [World Quest Party]", "PARTY")
 			StaticPopup_Show("WQP_LEAVEPARTY")
 		end
 		WQPFrame.ExitWQ()
@@ -289,13 +290,13 @@ function WQPFrame.HookEvents()
 	WQPFrame.JoinFrame.CalloutButton:SetScript("OnClick", function(self)
 		if isRegistered then
 			questName = C_TaskQuest.GetQuestInfoByQuestID(activeWQ)
-			msg = "LFM \124cffffff00\124Hquest:"..activeWQ..":110\124h["..questName.."]\124h\124r - whisper me \"wq\" for an invite! [World Quest Party]"
+			questLink = GetQuestLink(activeWQ)
+			msg = "LFM "..questLink.." - whisper me \"wq\" for an invite! [World Quest Party]"
 			generalChannelNum = GetChannelName("General - "..GetZoneText())
-			print(generalChannelNum)
 			if not DEBUG then
 				SendChatMessage(msg, "CHANNEL", nil, generalChannelNum)
 			else
-				DebugPrint("MSG: "..msg)
+				SendChatMessage(msg, "WHISPER", nil, UnitName("player"))
 				SendChatMessage("wq", "WHISPER", nil, UnitName("player"))
 			end
 			ButtonThrottle(WQPFrame.JoinFrame.CalloutButton, 30, function()
