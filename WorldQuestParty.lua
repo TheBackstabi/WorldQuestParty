@@ -92,7 +92,7 @@ end
 
 function RegEvents:CHAT_MSG_WHISPER(event, msg, sender)
 	msg = string.lower(msg)
-	if isRegistered and (msg == "wq" or msg == "\"wq\"" or msg:match("inv")) then
+	if isRegistered and (msg:find("wq") > 0 or msg:find("inv") > 0 or msg == "\"wq\"" or msg:match("inv")) then
 		DebugPrint("Inviting "..sender)
 		InviteUnit(sender)
 	end
