@@ -2,6 +2,6 @@
 ## Title: World Quest Party
 ## Notes: Create or Join world quest groups with a single click!
 ## Version: 8.0.1:0
-## SavedVariables: JoinFrameLocation
+## SavedVariables: FrameLoc
 WorldQuestParty.lua
 WorldQuestParty_Frames.lua

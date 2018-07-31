@@ -1,11 +1,23 @@
 WQPFrame.JoinFrame = CreateFrame("Frame", "WQPJoinFrame", WQPFrame)
 WQPFrame.HeaderFrame = CreateFrame("Frame", "WQPHeaderFrame", WQPFrame)
+FrameLoc = {
+	point = "LEFT",
+	relativeTo = "WQPFrame",
+	relativePoint = "LEFT",
+	x = 200,
+	y = 0
+}
 
 function SetFrameAnchors()
 	WQPFrame:SetAllPoints()
 	WQPFrame:SetSize(UIParent:GetSize())
 	local frame = WQPFrame.HeaderFrame
-	frame:SetPoint("LEFT", WQPFrame, "LEFT", 200, 0)
+	frame:ClearAllPoints()
+	--if FrameLoc then
+		frame:SetPoint(FrameLoc.point, FrameLoc.relativeTo, FrameLoc.relativePoint, FrameLoc.x, FrameLoc.y)
+	--else
+	--	frame:SetPoint("LEFT", WQPFrame, "LEFT", 200, 0)
+	--end
 	frame:SetWidth(250)
 	frame:SetHeight(30)
 	local ntex = frame:CreateTexture()
@@ -130,8 +142,11 @@ function WQPFrame.CreateSubFrames()
 	WQPFrame.HeaderFrame:EnableMouse(true)
 	WQPFrame.HeaderFrame:RegisterForDrag("LeftButton")
 	WQPFrame.HeaderFrame:SetScript("OnDragStart", WQPFrame.HeaderFrame.StartMoving)
-	WQPFrame.HeaderFrame:SetScript("OnDragStop", WQPFrame.HeaderFrame.StopMovingOrSizing)
-
+	WQPFrame.HeaderFrame:SetScript("OnDragStop", function()
+		WQPFrame.HeaderFrame:StopMovingOrSizing()
+		FrameLoc.point, FrameLoc.relativeTo, FrameLoc.relativePoint, FrameLoc.x, FrameLoc.y = WQPFrame.HeaderFrame:GetPoint(1)
+	end)
+	
 	JoinFrame_JoinButton()
 	JoinFrame_ListButton()
 	HeaderFrame_CloseButton()
@@ -139,6 +154,5 @@ function WQPFrame.CreateSubFrames()
 	JoinFrame_GeneralCallout()
 	HeaderFrame_MinimizeButton()
 	JoinFrame_LeaveParty()
-	
 	WQPFrame:Hide()
 end
