@@ -481,10 +481,10 @@ SlashCmdList["WQP"] = function(msg)
 		WQPFrame.ExitWQ()
 	elseif (msg == "flush" or msg == "f" or msg == "r" or msg == "reset") then
 		recentWQ = {}
-		print("WQP: Flushed all recent world quests!")
+		print("WQP: All set, addon has been reset!")
 	elseif (msg == "debug") then
 		DEBUG = true
 	else
-		print("WQP Commands:\n\tflush\n\treset - Clear the recent WQ list\n\tleave\n\texit - Exit the current WQ")
+		print("WQP Commands:\nreset - clear and reset addon data.")
 	end
 end 
