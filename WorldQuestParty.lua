@@ -121,6 +121,7 @@ function RegEvents:GROUP_ROSTER_UPDATE(self)
 			end
 		else
 			WQPFrame.SetAsParty(false)
+			C_ChatInfo.SendAddonMessage("WQPartyFinder", "@", "PARTY")
 		end
 	elseif activeWQ then
 		WQPFrame.SetAsIndividual()
@@ -372,6 +373,13 @@ function WQPFrame.SetAsIndividual()
 	WQPFrame.JoinFrame.NewParty:Show()
 	WQPFrame.JoinFrame.CalloutButton:Hide()
 	WQPFrame.JoinFrame.LeaveButton:Hide()
+	
+	C_ChatInfo.SendAddonMessage("WQPartyFinder", ">", "CHANNEL", channelNum)
+	WQPFrame.JoinFrame.JoinButton:SetText("Searching...")
+	WQPFrame.JoinFrame.JoinButton:SetNormalFontObject("GameFontNormal")
+	joinButtonTimer = ButtonThrottle(WQPFrame.JoinFrame.JoinButton, 3, function(self)
+		CreateJoinButton()
+	end)
 end
 
 local function GetChannelNumber(channelName)
@@ -401,18 +409,17 @@ function WQPFrame.EnterWQ(questID)
 	if not IsRecentWQ(questID) then
 		WQPFrame:Show()
 		activeWQ = questID
-		WQPFrame.HeaderFrame.Text:SetText(string.sub(C_TaskQuest.GetQuestInfoByQuestID(activeWQ), 1, 20))
+		WQname = C_TaskQuest.GetQuestInfoByQuestID(activeWQ)
+		if (string.len(WQname) > 25) then
+			WQPFrame.HeaderFrame.Text:SetText(string.sub(WQname, 1, 25).."...")
+		else
+			WQPFrame.HeaderFrame.Text:SetText(WQname)
+		end
 		DebugPrint(string.format("Joining channel for %s", questID))
 		GetChannelNumber(WQchannel)
 		if not UnitIsGroupLeader("player") and not UnitInParty("player") and not DEBUG_AS_LEAD and not DEBUG_AS_MEMBER then
 			DebugPrint("Registering as an individual")
 			WQPFrame.SetAsIndividual()
-			C_ChatInfo.SendAddonMessage("WQPartyFinder", ">", "CHANNEL", channelNum)
-			WQPFrame.JoinFrame.JoinButton:SetText("Searching...")
-			WQPFrame.JoinFrame.JoinButton:SetNormalFontObject("GameFontNormal")
-			joinButtonTimer = ButtonThrottle(WQPFrame.JoinFrame.JoinButton, 3, function(self)
-				CreateJoinButton()
-			end)
 		elseif UnitIsGroupLeader("player") or DEBUG_AS_LEAD then
 			DebugPrint("Registering as a party leader")
 			WQPFrame.SetAsParty(true)
@@ -481,6 +488,7 @@ SlashCmdList["WQP"] = function(msg)
 		WQPFrame.ExitWQ()
 	elseif (msg == "flush" or msg == "f" or msg == "r" or msg == "reset") then
 		recentWQ = {}
+		CheckIfCurrentLocIsWQ()
 		print("WQP: All set, addon has been reset!")
 	elseif (msg == "debug") then
 		DEBUG = true
