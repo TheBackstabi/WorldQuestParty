@@ -1,12 +1,31 @@
 WQPFrame.JoinFrame = CreateFrame("Frame", "WQPJoinFrame", WQPFrame)
 WQPFrame.HeaderFrame = CreateFrame("Frame", "WQPHeaderFrame", WQPFrame)
 FrameLoc = {
-	point = "LEFT",
+	point = "BOTTOMLEFT",
 	relativeTo = "WQPFrame",
-	relativePoint = "LEFT",
-	x = 200,
-	y = 0
+	relativePoint = "BOTTOMLEFT",
+	x = 150,
+	y = 150
 }
+
+local function SetBorder(frame)
+	frame.Backdrop = frame.Backdrop or CreateFrame("Frame", frame:GetName().."Border", frame)
+	frame.Backdrop:ClearAllPoints()
+	frame.Backdrop:SetWidth(frame:GetWidth() + 2)
+	frame.Backdrop:SetHeight(frame:GetHeight() + 2)
+	frame.Backdrop:SetPoint("CENTER", frame, "CENTER")
+	frame.Backdrop:SetBackdrop( {
+		bgFile = nil,
+		edgeFile = "Interface\\AddOns\\WorldQuestParty\\Media\\Button-Normal.blp",
+		tile = false,
+		tileSize = 0,
+		edgeSize = 2,
+		insets = {left = -1, right = -1, top = -1, bottom = -1}
+	} )
+	frame:SetBackdropBorderColor(.5, .5, .5, 1)
+	frame.Backdrop:SetFrameStrata(frame:GetFrameStrata())
+	frame.Backdrop:SetFrameLevel(frame:GetFrameLevel() - 1)
+end
 
 function SetFrameAnchors()
 	WQPFrame:SetAllPoints()
@@ -21,50 +40,54 @@ function SetFrameAnchors()
 	frame:SetWidth(250)
 	frame:SetHeight(30)
 	local ntex = frame:CreateTexture()
-	ntex:SetTexture("Interface/DialogFrame/UI-DialogBox-Background")
-	ntex:SetTexCoord(0, 0.625, 0, 0.625)
+	--ntex:SetTexture("Interface/DialogFrame/UI-DialogBox-Background")
+	ntex:SetColorTexture(0, 0, 0, .35)
 	ntex:SetAllPoints()
+	SetBorder(frame)
 
 	local frame = WQPFrame.JoinFrame
-	frame:SetPoint("LEFT", WQPFrame.HeaderFrame, "LEFT", 0, -83)
+	frame:SetPoint("TOP", WQPFrame.HeaderFrame, "BOTTOM", 0, 0)
 	frame:SetWidth(250)
 	frame:SetHeight(125)
 	local ntex = frame:CreateTexture()
-	ntex:SetTexture("Interface/DialogFrame/UI-DialogBox-Background")
-	ntex:SetTexCoord(0, 0.625, 0, 0.625)
+	--ntex:SetTexture("Interface/DialogFrame/UI-DialogBox-Background")
+	ntex:SetColorTexture(0, 0, 0, .35)
 	ntex:SetAllPoints()
+	SetBorder(frame)
 end
 
 function SetupButtonFrame(frame)
+	--SetBorder(frame)
 	local ntex = frame:CreateTexture()
-	ntex:SetTexture("Interface/Buttons/UI-Panel-Button-Up")
-	ntex:SetTexCoord(0, 0.625, 0, 0.6875)
+	--ntex:SetTexture("Interface/Buttons/UI-Panel-Button-Up")
+	ntex:SetTexture("Interface\\AddOns\\WorldQuestParty\\Media\\Button-Normal.blp")
 	ntex:SetAllPoints()	
 	frame:SetNormalTexture(ntex)
 	
 	local htex = frame:CreateTexture()
-	htex:SetTexture("Interface/Buttons/UI-Panel-Button-Highlight")
-	htex:SetTexCoord(0, 0.625, 0, 0.6875)
+	--htex:SetTexture("Interface/Buttons/UI-Panel-Button-Highlight")
+	htex:SetTexture("Interface\\AddOns\\WorldQuestParty\\Media\\Button-Pressed.blp")
 	htex:SetAllPoints()
 	frame:SetHighlightTexture(htex)
 	
 	local ptex = frame:CreateTexture()
-	ptex:SetTexture("Interface/Buttons/UI-Panel-Button-Down")
-	ptex:SetTexCoord(0, 0.625, 0, 0.6875)
+	--ptex:SetTexture("Interface/Buttons/UI-Panel-Button-Down")
+	ptex:SetTexture("Interface\\AddOns\\WorldQuestParty\\Media\\Button-Pressed.blp")
 	ptex:SetAllPoints()
 	frame:SetPushedTexture(ptex)
 	
 	local dtex = frame:CreateTexture()
-	dtex:SetTexture("Interface/Buttons/UI-Panel-Button-Disabled")
-	dtex:SetTexCoord(0, 0.625, 0, 0.6875)
+	--dtex:SetTexture("Interface/Buttons/UI-Panel-Button-Disabled")
+	dtex:SetTexture("Interface\\AddOns\\WorldQuestParty\\Media\\Button-Normal.blp")
 	dtex:SetAllPoints()
 	frame:SetDisabledTexture(dtex)
-	return frame
+	
+	frame:SetDisabledFontObject("GameFontDisable")
 end
 
 function JoinFrame_JoinButton()
 	WQPFrame.JoinFrame.JoinButton = CreateFrame("Button", "WQPJoinButton1", WQPFrame.JoinFrame)
-	WQPFrame.JoinFrame.JoinButton:SetPoint("TOP", WQPFrame.JoinFrame, "TOP", 0, -5)
+	WQPFrame.JoinFrame.JoinButton:SetPoint("TOP", WQPFrame.JoinFrame, "TOP", 0, -10)
 	WQPFrame.JoinFrame.JoinButton:SetWidth(200)
 	WQPFrame.JoinFrame.JoinButton:SetHeight(50)
 	SetupButtonFrame(WQPFrame.JoinFrame.JoinButton)
@@ -75,9 +98,10 @@ function HeaderFrame_CloseButton()
 	WQPFrame.HeaderFrame.CloseButton:SetPoint("TOPRIGHT", WQPFrame.HeaderFrame, "TOPRIGHT", 0, 0)
 	WQPFrame.HeaderFrame.CloseButton:SetWidth(30)
 	WQPFrame.HeaderFrame.CloseButton:SetHeight(30)
-	SetupButtonFrame(WQPFrame.HeaderFrame.CloseButton)
 	WQPFrame.HeaderFrame.CloseButton:SetText("X")
 	WQPFrame.HeaderFrame.CloseButton:SetNormalFontObject("GameFontNormal")
+	SetupButtonFrame(WQPFrame.HeaderFrame.CloseButton)
+	SetBorder(WQPFrame.HeaderFrame.CloseButton)
 end
 
 function JoinFrame_CreateParty()
@@ -85,9 +109,9 @@ function JoinFrame_CreateParty()
 	WQPFrame.JoinFrame.NewParty:SetPoint("TOP", WQPFrame.JoinFrame, "TOP", 0, -65)
 	WQPFrame.JoinFrame.NewParty:SetWidth(200)
 	WQPFrame.JoinFrame.NewParty:SetHeight(50)
-	SetupButtonFrame(WQPFrame.JoinFrame.NewParty)
 	WQPFrame.JoinFrame.NewParty:SetText("Create Party")
 	WQPFrame.JoinFrame.NewParty:SetNormalFontObject("GameFontNormal")
+	SetupButtonFrame(WQPFrame.JoinFrame.NewParty)
 end
 
 function JoinFrame_ListButton()
@@ -95,9 +119,10 @@ function JoinFrame_ListButton()
 	WQPFrame.JoinFrame.ListButton:SetPoint("TOP", WQPFrame.JoinFrame, "TOP", 0, -5)
 	WQPFrame.JoinFrame.ListButton:SetWidth(200)
 	WQPFrame.JoinFrame.ListButton:SetHeight(50)
-	SetupButtonFrame(WQPFrame.JoinFrame.ListButton)
+	
 	WQPFrame.JoinFrame.ListButton:SetText("Enlist Party")
 	WQPFrame.JoinFrame.ListButton:SetNormalFontObject("GameFontNormal")
+	SetupButtonFrame(WQPFrame.JoinFrame.ListButton)
 end
 
 function JoinFrame_GeneralCallout()
@@ -105,19 +130,22 @@ function JoinFrame_GeneralCallout()
 	WQPFrame.JoinFrame.CalloutButton:SetPoint("TOP", WQPFrame.JoinFrame, "TOP", 0, -65)
 	WQPFrame.JoinFrame.CalloutButton:SetWidth(200)
 	WQPFrame.JoinFrame.CalloutButton:SetHeight(50)
-	SetupButtonFrame(WQPFrame.JoinFrame.CalloutButton)
+	
 	WQPFrame.JoinFrame.CalloutButton:SetText("Post LFM")
 	WQPFrame.JoinFrame.CalloutButton:SetNormalFontObject("GameFontNormal")
+	SetupButtonFrame(WQPFrame.JoinFrame.CalloutButton)
 end
 
 function HeaderFrame_MinimizeButton()
 	WQPFrame.HeaderFrame.MinimizeButton = CreateFrame("Button", "WQPMinButton", WQPFrame.HeaderFrame)
-	WQPFrame.HeaderFrame.MinimizeButton:SetPoint("TOPRIGHT", WQPFrame.HeaderFrame, "TOPRIGHT", -40, 0)
+	WQPFrame.HeaderFrame.MinimizeButton:SetPoint("TOPRIGHT", WQPFrame.HeaderFrame, "TOPRIGHT", -31, 0)
 	WQPFrame.HeaderFrame.MinimizeButton:SetWidth(30)
 	WQPFrame.HeaderFrame.MinimizeButton:SetHeight(30)
-	SetupButtonFrame(WQPFrame.HeaderFrame.MinimizeButton)
+	
 	WQPFrame.HeaderFrame.MinimizeButton:SetText("_")
 	WQPFrame.HeaderFrame.MinimizeButton:SetNormalFontObject("GameFontNormal")
+	SetupButtonFrame(WQPFrame.HeaderFrame.MinimizeButton)
+	SetBorder(WQPFrame.HeaderFrame.MinimizeButton)
 end
 
 function JoinFrame_LeaveParty()
@@ -125,9 +153,10 @@ function JoinFrame_LeaveParty()
 	WQPFrame.JoinFrame.LeaveButton:SetPoint("TOP", WQPFrame.JoinFrame, "TOP", 0, -65)
 	WQPFrame.JoinFrame.LeaveButton:SetWidth(200)
 	WQPFrame.JoinFrame.LeaveButton:SetHeight(50)
-	SetupButtonFrame(WQPFrame.JoinFrame.LeaveButton)
+	
 	WQPFrame.JoinFrame.LeaveButton:SetText("Leave Party")
 	WQPFrame.JoinFrame.LeaveButton:SetNormalFontObject("GameFontNormal")
+	SetupButtonFrame(WQPFrame.JoinFrame.LeaveButton)
 end
 
 function WQPFrame.CreateSubFrames()
@@ -136,7 +165,7 @@ function WQPFrame.CreateSubFrames()
 	WQPFrame.HeaderFrame.Text = WQPFrame.HeaderFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	WQPFrame.HeaderFrame.Text:SetPoint("LEFT", WQPFrame.HeaderFrame, "LEFT", 10, 0)
 	WQPFrame.HeaderFrame.Text:SetJustifyH("LEFT")
-	WQPFrame.HeaderFrame.Text:SetTextColor(1, 1, 1, 1)
+	WQPFrame.HeaderFrame.Text:SetTextColor(.9, .8, 0, 1)
 	
 	WQPFrame.HeaderFrame:SetMovable(true)
 	WQPFrame.HeaderFrame:EnableMouse(true)
