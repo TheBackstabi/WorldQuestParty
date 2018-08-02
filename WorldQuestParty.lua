@@ -1,4 +1,4 @@
-local DEBUG = false 
+local DEBUG = true 
 	local DEBUG_AS_LEAD = false
 	local DEBUG_AS_MEMBER = false
 
@@ -290,12 +290,9 @@ function WQPFrame.HookEvents()
 			end)
 			isRegistered = false
 			if not UnitInParty("player") then
-				C_ChatInfo.SendAddonMessage("WQPartyFinder", ">", "CHANNEL", channelNum)
 				WQPFrame.SetAsIndividual()
-				WQPFrame.JoinFrame.JoinButton:SetText("Searching...")
-				WQPFrame.JoinFrame.JoinButton:SetNormalFontObject("GameFontNormal")
-				joinButtonTimer = ButtonThrottle(WQPFrame.JoinFrame.JoinButton, 3, function()
-					CreateJoinButton()
+				ButtonThrottle(WQPFrame.JoinFrame.NewParty, 3, function()
+					WQPFrame.JoinFrame.NewParty:SetText("Create Party")
 				end)
 			end
 		else
