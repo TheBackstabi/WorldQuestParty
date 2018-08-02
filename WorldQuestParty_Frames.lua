@@ -116,7 +116,7 @@ end
 
 function JoinFrame_ListButton()
 	WQPFrame.JoinFrame.ListButton = CreateFrame("Button", "WQPListParty", WQPFrame.JoinFrame)
-	WQPFrame.JoinFrame.ListButton:SetPoint("TOP", WQPFrame.JoinFrame, "TOP", 0, -5)
+	WQPFrame.JoinFrame.ListButton:SetPoint("TOP", WQPFrame.JoinFrame, "TOP", 0, -10)
 	WQPFrame.JoinFrame.ListButton:SetWidth(200)
 	WQPFrame.JoinFrame.ListButton:SetHeight(50)
 	
