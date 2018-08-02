@@ -1,4 +1,4 @@
-local DEBUG = true 
+local DEBUG = false 
 	local DEBUG_AS_LEAD = false
 	local DEBUG_AS_MEMBER = false
 
@@ -10,6 +10,7 @@ local channelNum = nil
 local parties = {}
 local isRegistered = false
 local joinButtonTimer = nil
+local isAwaitingInvite = false
 StaticPopupDialogs["WQP_LEAVEPARTY"] = {
 	text = "Leave party?",
 	button1 = "Yes",
@@ -146,6 +147,14 @@ function RegEvents:QUEST_TURNED_IN(event, questID, experience, money)
 	end
 end
 
+function RegEvents:PARTY_INVITE_REQUEST()
+	if isAwaitingInvite then
+		DebugPrint("Auto-accepting invite")
+		AcceptGroup()
+		isAwaitingInvite = false
+	end
+end
+
 local function CheckIfCurrentLocIsWQ()
 	uiMapId = C_Map.GetBestMapForUnit("player")
 	if uiMapId then
@@ -255,6 +264,7 @@ function WQPFrame.HookEvents()
 			if not hasRequested then
 				parties[sender] = true
 				DebugPrint(string.format("Requesting invite from %s", sender))
+				isAwaitingInvite = true
 				C_ChatInfo.SendAddonMessage("WQPartyFinder", "!", "WHISPER", sender)
 				self:SetText("Requesting Invite...")
 				joinButtonTimer = ButtonThrottle(self, 3, function()
@@ -262,7 +272,6 @@ function WQPFrame.HookEvents()
 						CreateJoinButton()
 					end
 				end, true)
-				
 				break
 			end
 		end
