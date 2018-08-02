@@ -123,13 +123,16 @@ function RegEvents:GROUP_ROSTER_UPDATE(self)
 			end
 			if (GetNumGroupMembers() == maxPartySize) then
 				C_ChatInfo.SendAddonMessage("WQPartyFinder", "?", "CHANNEL", channelNum)
+				isRegistered = false
 				--C_ChatInfo.SendAddonMessage("WQPartyFinder", "?", "PARTY")
 			else
 				C_ChatInfo.SendAddonMessage("WQPartyFinder", "<", "CHANNEL", channelNum)
+				isRegistered = true
 				--C_ChatInfo.SendAddonMessage("WQPartyFinder", "<", "PARTY")
 			end
 		else
 			WQPFrame.SetAsParty(false)
+			isRegistered = false
 		end
 	elseif activeWQ and not isRegistered then
 		WQPFrame.SetAsIndividual()
