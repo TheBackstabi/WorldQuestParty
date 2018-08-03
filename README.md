@@ -1,6 +1,8 @@
 # World Quest Party
 This addon was designed to make the world questing experience more accessible, pleasant, and social. With the introduction of the pre-patch, fully automated world quest grouping via cross-realm Group Finder was disabled. With that removal, the experience of world questing was negatively impacted. World Quest Party (WQP) is here to help!
 
+![Preview of WQP](http://accomp.me/wp-content/uploads/2018/08/wqp-preview.png "Preview of WQP")
+
 ---
 
 ## How it works

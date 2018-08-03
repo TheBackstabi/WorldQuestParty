@@ -500,6 +500,6 @@ SlashCmdList["WQP"] = function(msg)
 	elseif (msg == "debug") then
 		DEBUG = true
 	else
-		print("WQP Commands:\nreset - clear and reset addon data.")
+		print("If you run into any issues, please reach out for support!\n\nWQP Commands:\nreset - clear and reset addon data.")
 	end
 end 
