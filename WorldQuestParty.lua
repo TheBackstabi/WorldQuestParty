@@ -1,4 +1,4 @@
-local DEBUG = true 
+local DEBUG = false 
 local AddonMessageChannel = "WQPartyFinder"
 
 WQPFrame = CreateFrame("Frame", "WorldQuestPartyFrame", UIParent)
