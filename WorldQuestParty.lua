@@ -497,8 +497,8 @@ SlashCmdList["WQP"] = function(msg)
 		recentWQ = {}
 		CheckIfCurrentLocIsWQ()
 		print("WQP: All set, addon has been reset!")
-	elseif (msg == "debug") then
-		DEBUG = true
+	--elseif (msg == "debug") then
+	--	DEBUG = true
 	else
 		print("If you run into any issues, please reach out for support!\n\nWQP Commands:\nreset - clear and reset addon data.")
 	end
