@@ -27,7 +27,7 @@ local function SetBorder(frame)
 	frame.Backdrop:SetFrameLevel(frame:GetFrameLevel() - 1)
 end
 
-function SetFrameAnchors()
+local function SetFrameAnchors()
 	WQPFrame:SetAllPoints()
 	WQPFrame:SetSize(UIParent:GetSize())
 	local frame = WQPFrame.HeaderFrame
@@ -56,7 +56,7 @@ function SetFrameAnchors()
 	SetBorder(frame)
 end
 
-function SetupButtonFrame(frame)
+local function SetupButtonFrame(frame)
 	--SetBorder(frame)
 	local ntex = frame:CreateTexture()
 	--ntex:SetTexture("Interface/Buttons/UI-Panel-Button-Up")
@@ -85,7 +85,7 @@ function SetupButtonFrame(frame)
 	frame:SetDisabledFontObject("GameFontDisable")
 end
 
-function JoinFrame_JoinButton()
+local function JoinFrame_JoinButton()
 	WQPFrame.JoinFrame.JoinButton = CreateFrame("Button", "WQPJoinButton1", WQPFrame.JoinFrame)
 	WQPFrame.JoinFrame.JoinButton:SetPoint("TOP", WQPFrame.JoinFrame, "TOP", 0, -10)
 	WQPFrame.JoinFrame.JoinButton:SetWidth(200)
@@ -93,7 +93,7 @@ function JoinFrame_JoinButton()
 	SetupButtonFrame(WQPFrame.JoinFrame.JoinButton)
 end
 
-function HeaderFrame_CloseButton()
+local function HeaderFrame_CloseButton()
 	WQPFrame.HeaderFrame.CloseButton = CreateFrame("Button", "WQPJoinClose", WQPFrame.HeaderFrame)
 	WQPFrame.HeaderFrame.CloseButton:SetPoint("TOPRIGHT", WQPFrame.HeaderFrame, "TOPRIGHT", 0, 0)
 	WQPFrame.HeaderFrame.CloseButton:SetWidth(30)
@@ -104,7 +104,7 @@ function HeaderFrame_CloseButton()
 	SetBorder(WQPFrame.HeaderFrame.CloseButton)
 end
 
-function JoinFrame_CreateParty()
+local function JoinFrame_CreateParty()
 	WQPFrame.JoinFrame.NewParty = CreateFrame("Button", "WQPNewParty", WQPFrame.JoinFrame)
 	WQPFrame.JoinFrame.NewParty:SetPoint("TOP", WQPFrame.JoinFrame, "TOP", 0, -65)
 	WQPFrame.JoinFrame.NewParty:SetWidth(200)
@@ -114,7 +114,7 @@ function JoinFrame_CreateParty()
 	SetupButtonFrame(WQPFrame.JoinFrame.NewParty)
 end
 
-function JoinFrame_ListButton()
+local function JoinFrame_ListButton()
 	WQPFrame.JoinFrame.ListButton = CreateFrame("Button", "WQPListParty", WQPFrame.JoinFrame)
 	WQPFrame.JoinFrame.ListButton:SetPoint("TOP", WQPFrame.JoinFrame, "TOP", 0, -10)
 	WQPFrame.JoinFrame.ListButton:SetWidth(200)
@@ -125,7 +125,7 @@ function JoinFrame_ListButton()
 	SetupButtonFrame(WQPFrame.JoinFrame.ListButton)
 end
 
-function JoinFrame_GeneralCallout()
+local function JoinFrame_GeneralCallout()
 	WQPFrame.JoinFrame.CalloutButton = CreateFrame("Button", "WQPCallout", WQPFrame.JoinFrame)
 	WQPFrame.JoinFrame.CalloutButton:SetPoint("TOP", WQPFrame.JoinFrame, "TOP", 0, -65)
 	WQPFrame.JoinFrame.CalloutButton:SetWidth(200)
@@ -136,7 +136,7 @@ function JoinFrame_GeneralCallout()
 	SetupButtonFrame(WQPFrame.JoinFrame.CalloutButton)
 end
 
-function HeaderFrame_MinimizeButton()
+local function HeaderFrame_MinimizeButton()
 	WQPFrame.HeaderFrame.MinimizeButton = CreateFrame("Button", "WQPMinButton", WQPFrame.HeaderFrame)
 	WQPFrame.HeaderFrame.MinimizeButton:SetPoint("TOPRIGHT", WQPFrame.HeaderFrame, "TOPRIGHT", -31, 0)
 	WQPFrame.HeaderFrame.MinimizeButton:SetWidth(30)
@@ -148,7 +148,7 @@ function HeaderFrame_MinimizeButton()
 	SetBorder(WQPFrame.HeaderFrame.MinimizeButton)
 end
 
-function JoinFrame_LeaveParty()
+local function JoinFrame_LeaveParty()
 	WQPFrame.JoinFrame.LeaveButton = CreateFrame("Button", "WQPLeave", WQPFrame.JoinFrame)
 	WQPFrame.JoinFrame.LeaveButton:SetPoint("TOP", WQPFrame.JoinFrame, "TOP", 0, -65)
 	WQPFrame.JoinFrame.LeaveButton:SetWidth(200)
@@ -160,7 +160,6 @@ function JoinFrame_LeaveParty()
 end
 
 function WQPFrame.CreateSubFrames()
-	DebugPrint("Creating Frames...")
 	SetFrameAnchors()
 	WQPFrame.HeaderFrame.Text = WQPFrame.HeaderFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	WQPFrame.HeaderFrame.Text:SetPoint("LEFT", WQPFrame.HeaderFrame, "LEFT", 10, 0)
