@@ -114,7 +114,7 @@ end
 
 function RegEvents:CHAT_MSG_WHISPER(event, msg, sender)
 	local msg = string.lower(msg)
-	if isRegistered and (msg:find("wq") > 0 or msg:find("inv") > 0 or msg == "\"wq\"") then
+	if isRegistered and (msg:find("wq") or msg:find("inv") or msg == "\"wq\"") then
 		WQPFrame.DebugPrint("Inviting "..sender)
 		InviteUnit(sender)
 	end
