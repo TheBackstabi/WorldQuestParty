@@ -1,6 +1,6 @@
 WQPFrame.JoinFrame = CreateFrame("Frame", "WQPJoinFrame", WQPFrame)
 WQPFrame.HeaderFrame = CreateFrame("Frame", "WQPHeaderFrame", WQPFrame)
-FrameLoc = {
+FrameLoc = { --SavedVar
 	point = "BOTTOMLEFT",
 	relativeTo = "WQPFrame",
 	relativePoint = "BOTTOMLEFT",
@@ -104,34 +104,34 @@ local function HeaderFrame_CloseButton()
 	SetBorder(WQPFrame.HeaderFrame.CloseButton)
 end
 
-local function JoinFrame_CreateParty()
+local function JoinFrame_CreateParty(text)
 	WQPFrame.JoinFrame.NewParty = CreateFrame("Button", "WQPNewParty", WQPFrame.JoinFrame)
 	WQPFrame.JoinFrame.NewParty:SetPoint("TOP", WQPFrame.JoinFrame, "TOP", 0, -65)
 	WQPFrame.JoinFrame.NewParty:SetWidth(200)
 	WQPFrame.JoinFrame.NewParty:SetHeight(50)
-	WQPFrame.JoinFrame.NewParty:SetText("Create Party")
+	WQPFrame.JoinFrame.NewParty:SetText(text)
 	WQPFrame.JoinFrame.NewParty:SetNormalFontObject("GameFontNormal")
 	SetupButtonFrame(WQPFrame.JoinFrame.NewParty)
 end
 
-local function JoinFrame_ListButton()
+local function JoinFrame_ListButton(text)
 	WQPFrame.JoinFrame.ListButton = CreateFrame("Button", "WQPListParty", WQPFrame.JoinFrame)
 	WQPFrame.JoinFrame.ListButton:SetPoint("TOP", WQPFrame.JoinFrame, "TOP", 0, -10)
 	WQPFrame.JoinFrame.ListButton:SetWidth(200)
 	WQPFrame.JoinFrame.ListButton:SetHeight(50)
 	
-	WQPFrame.JoinFrame.ListButton:SetText("Enlist Party")
+	WQPFrame.JoinFrame.ListButton:SetText(text)
 	WQPFrame.JoinFrame.ListButton:SetNormalFontObject("GameFontNormal")
 	SetupButtonFrame(WQPFrame.JoinFrame.ListButton)
 end
 
-local function JoinFrame_GeneralCallout()
+local function JoinFrame_GeneralCallout(text)
 	WQPFrame.JoinFrame.CalloutButton = CreateFrame("Button", "WQPCallout", WQPFrame.JoinFrame)
 	WQPFrame.JoinFrame.CalloutButton:SetPoint("TOP", WQPFrame.JoinFrame, "TOP", 0, -65)
 	WQPFrame.JoinFrame.CalloutButton:SetWidth(200)
 	WQPFrame.JoinFrame.CalloutButton:SetHeight(50)
 	
-	WQPFrame.JoinFrame.CalloutButton:SetText("Post LFM")
+	WQPFrame.JoinFrame.CalloutButton:SetText(text)
 	WQPFrame.JoinFrame.CalloutButton:SetNormalFontObject("GameFontNormal")
 	SetupButtonFrame(WQPFrame.JoinFrame.CalloutButton)
 end
@@ -148,18 +148,18 @@ local function HeaderFrame_MinimizeButton()
 	SetBorder(WQPFrame.HeaderFrame.MinimizeButton)
 end
 
-local function JoinFrame_LeaveParty()
+local function JoinFrame_LeaveParty(text)
 	WQPFrame.JoinFrame.LeaveButton = CreateFrame("Button", "WQPLeave", WQPFrame.JoinFrame)
 	WQPFrame.JoinFrame.LeaveButton:SetPoint("TOP", WQPFrame.JoinFrame, "TOP", 0, -65)
 	WQPFrame.JoinFrame.LeaveButton:SetWidth(200)
 	WQPFrame.JoinFrame.LeaveButton:SetHeight(50)
 	
-	WQPFrame.JoinFrame.LeaveButton:SetText("Leave Party")
+	WQPFrame.JoinFrame.LeaveButton:SetText(text)
 	WQPFrame.JoinFrame.LeaveButton:SetNormalFontObject("GameFontNormal")
 	SetupButtonFrame(WQPFrame.JoinFrame.LeaveButton)
 end
 
-function WQPFrame.CreateSubFrames()
+function WQPFrame.CreateSubFrames(_L)
 	SetFrameAnchors()
 	WQPFrame.HeaderFrame.Text = WQPFrame.HeaderFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	WQPFrame.HeaderFrame.Text:SetPoint("LEFT", WQPFrame.HeaderFrame, "LEFT", 10, 0)
@@ -176,11 +176,11 @@ function WQPFrame.CreateSubFrames()
 	end)
 	
 	JoinFrame_JoinButton()
-	JoinFrame_ListButton()
+	JoinFrame_ListButton(_L["LIST"])
 	HeaderFrame_CloseButton()
-	JoinFrame_CreateParty()
-	JoinFrame_GeneralCallout()
+	JoinFrame_CreateParty(_L["NEW"])
+	JoinFrame_GeneralCallout(_L["POST"])
 	HeaderFrame_MinimizeButton()
-	JoinFrame_LeaveParty()
+	JoinFrame_LeaveParty(_L["LEAVE"])
 	WQPFrame:Hide()
 end

@@ -1,7 +1,8 @@
 ## Interface: 80000
 ## Title: World Quest Party
 ## Notes: Create or Join world quest groups with a single click!
-## Version: 8.0.1:0
+## Version: BFA-1.2
 ## SavedVariables: FrameLoc
+WorldQuestParty_Locale.lua
 WorldQuestParty.lua
 WorldQuestParty_Frames.lua
