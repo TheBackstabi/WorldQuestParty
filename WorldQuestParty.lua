@@ -10,18 +10,6 @@ local parties = {}
 local isRegistered = false
 local joinButtonTimer = nil
 local isAwaitingInvite = false
-StaticPopupDialogs["WQP_LEAVEPARTY"] = {
-	text = "Leave party?",
-	button1 = "Yes",
-	button2 = "No",
-	OnAccept = function()
-		LeaveParty()
-	end,
-	timeout = 0,
-	whileDead = true,
-	hideOnEscape = false,
-	preferredIndex = 11,
-}
 
 function WQPFrame.DebugPrint(msg)
 	if (DEBUG) then
@@ -38,6 +26,18 @@ end)
 	
 function RegEvents:PLAYER_LOGIN(event)
 	_L = WQPLocale.BuildLocaleTable(GetLocale())
+	StaticPopupDialogs["WQP_LEAVEPARTY"] = {
+		text = _L["PROMPT"],
+		button1 = _L["YES"],
+		button2 = _L["NO"],
+		OnAccept = function()
+			LeaveParty()
+		end,
+		timeout = 0,
+		whileDead = true,
+		hideOnEscape = false,
+		preferredIndex = 11,
+	}
 	WQPFrame.CreateSubFrames(_L)
 	WQPFrame.HookEvents()
 end
