@@ -25,7 +25,7 @@ function WQPLocale.BuildLocaleTable(locale)
 		}
 	}
 	local loadedLoc = Locales[locale]
-	if not loadedLoc then
+	if loadedLoc == nil then
 		print("WQP: This locale is not translated! Loading enUS...")
 		return Locales["enUS"]
 	end

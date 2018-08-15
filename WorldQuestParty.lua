@@ -192,12 +192,24 @@ local function CheckIfCurrentLocIsWQ()
 				C_Timer.NewTimer(1, function()
 					WQPFrame.EnterWQ(WQs[k]["questId"])
 				end)
+				return 1
 			end
 		end
 	end
 end
 
+local function RemoveAllWQPChannels()
+	for i=1,GetNumDisplayChannels() do
+		local chName = GetChannelDisplayInfo(i)
+		local index = chName:find("WQP")
+		if index and index > 0 then
+			LeaveChannelByName(chName)
+		end
+	end
+end
+
 function RegEvents:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
+	RemoveAllWQPChannels()
 	WQPFrame.ExitWQ()
 	CheckIfCurrentLocIsWQ()
 end
@@ -265,9 +277,7 @@ function WQPFrame.HookEvents()
 	C_ChatInfo.RegisterAddonMessagePrefix("WQPartyFinder")
 	hooksecurefunc("ObjectiveTracker_Update", function(reason, questID)
 		if (UnitIsDeadOrGhost("player") == false and isRegistered == false and activeWQ ~= questID and reason == OBJECTIVE_TRACKER_UPDATE_WORLD_QUEST_ADDED) then
-			if (activeWQ) then
-				WQPFrame.ExitWQ()
-			end
+			WQPFrame.ExitWQ()
 			WQPFrame.DebugPrint(string.format("Entering WQ zone for %s", questID))
 			if not IsRecentWQ(questID) then
 				WQchannel = "WQP"..questID
@@ -466,6 +476,7 @@ function WQPFrame.ExitWQ()
 	if (activeWQ ~= nil) then
 		WQPFrame.DebugPrint(string.format("Exiting WQ %s", activeWQ))
 		C_ChatInfo.SendAddonMessage(AddonMessageChannel, "?", "CHANNEL", channelNum)
+		RemoveAllWQPChannels()
 		LeaveChannelByName(WQchannel)
 		table.insert(recentWQ, activeWQ)
 		activeWQ = nil
@@ -491,7 +502,9 @@ SlashCmdList["WQP"] = function(msg)
 	elseif (msg == "flush" or msg == "f" or msg == "r" or msg == "reset") then
 		WQPFrame.ExitWQ()
 		recentWQ = {}
-		CheckIfCurrentLocIsWQ()
+		C_Timer.NewTimer(1, function()
+			CheckIfCurrentLocIsWQ()
+		end)
 		print(_L["RESET"])
 	--elseif (msg == "debug") then
 	--	DEBUG = true

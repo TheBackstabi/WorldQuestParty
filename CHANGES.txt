@@ -1,0 +1,10 @@
+lightweight tag dd751a65b7ff18f4eed3e8364a53c099c0ce6927 BFA-1.5
+Author:	Eric Taylor <exaltedsolutions@gmail.com>
+Date:	Mon Aug 13 13:10:04 2018 -0400
+
+commit dd751a65b7ff18f4eed3e8364a53c099c0ce6927
+Author: Eric Taylor <exaltedsolutions@gmail.com>
+Date:   Mon Aug 13 13:10:04 2018 -0400
+
+    Tweaked general chat verbiage
+
