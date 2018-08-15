@@ -65,6 +65,21 @@ local function GetUnitGroupIndex(name)
 	return false
 end
 
+local function CreateJoinButton()
+	local currentSize = 0
+	for k, v in pairs(parties) do if not v then currentSize = currentSize+1 end end
+	if (currentSize == 0) then
+		WQPFrame.JoinFrame.JoinButton:SetText(_L["NO_PARTIES"])
+		WQPFrame.JoinFrame.JoinButton:Disable()
+	else
+		CancelTimer(joinButtonTimer)
+		WQPFrame.JoinFrame.JoinButton:Enable()
+		WQPFrame.JoinFrame.JoinButton:SetText(_L["JOIN"].." ("..currentSize..")")
+	end
+	WQPFrame.JoinFrame.JoinButton:SetNormalFontObject("GameFontNormal")
+	WQPFrame.JoinFrame.JoinButton:Show()
+end
+
 function RegEvents:CHAT_MSG_ADDON(self, prefix, msg, channel, sender, senderNoRealm)
 	WQPFrame.DebugPrint(string.format("Message received from %s on %s - \"%s\"", sender, channel, msg))
 	if DEBUG or not string.find(sender, UnitName("player")) then
@@ -256,21 +271,6 @@ local function IsRecentWQ(questID)
 		end
 	end
 	return false
-end
-
-local function CreateJoinButton()
-	local currentSize = 0
-	for k, v in pairs(parties) do if not v then currentSize = currentSize+1 end end
-	if (currentSize == 0) then
-		WQPFrame.JoinFrame.JoinButton:SetText(_L["NO_PARTIES"])
-		WQPFrame.JoinFrame.JoinButton:Disable()
-	else
-		CancelTimer(joinButtonTimer)
-		WQPFrame.JoinFrame.JoinButton:Enable()
-		WQPFrame.JoinFrame.JoinButton:SetText(_L["JOIN"].." ("..currentSize..")")
-	end
-	WQPFrame.JoinFrame.JoinButton:SetNormalFontObject("GameFontNormal")
-	WQPFrame.JoinFrame.JoinButton:Show()
 end
 
 function WQPFrame.HookEvents()
