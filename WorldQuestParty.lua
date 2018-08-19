@@ -193,12 +193,23 @@ function RegEvents:PARTY_INVITE_REQUEST()
 	end
 end
 
+local function IsQuestFiltered(questID)
+	local wqName, wqFaction = C_TaskQuest.GetQuestInfoByQuestID(questID)
+	local wqDesc = GetQuestObjectiveInfo(questID, 1, true)
+	if wqName:match("Supplies Needed") or wqName:match("Work Order") or wqFaction == 2163 or wqDesc:match("Defeat") then
+		return true
+	end
+	-- TODO: Custom quest filtering?
+	return false
+end
+
 local function CheckIfCurrentLocIsWQ()
 	local uiMapId = C_Map.GetBestMapForUnit("player")
 	if uiMapId then
 		local WQs = C_TaskQuest.GetQuestsForPlayerByMapID(uiMapId)
 		for k in pairs(WQs) do
-			if (C_QuestLog.IsOnQuest(WQs[k]["questId"])) then
+			local questID = WQs[k]["questId"]
+			if (C_QuestLog.IsOnQuest(questID) and not IsQuestFiltered(questID)) then
 				WQchannel = "WQP"..WQs[k]["questId"]
 				if C_PvP.IsWarModeActive() then
 					WQchannel = WQchannel.."PVP"
@@ -226,7 +237,9 @@ end
 function RegEvents:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
 	RemoveAllWQPChannels()
 	WQPFrame.ExitWQ()
-	CheckIfCurrentLocIsWQ()
+	C_Timer.After(2, function()
+		CheckIfCurrentLocIsWQ()
+	end)
 end
 
 for k, v in pairs(RegEvents) do
@@ -279,7 +292,7 @@ function WQPFrame.HookEvents()
 		if (UnitIsDeadOrGhost("player") == false and isRegistered == false and activeWQ ~= questID and reason == OBJECTIVE_TRACKER_UPDATE_WORLD_QUEST_ADDED) then
 			WQPFrame.ExitWQ()
 			WQPFrame.DebugPrint(string.format("Entering WQ zone for %s", questID))
-			if not IsRecentWQ(questID) then
+			if not IsRecentWQ(questID) and not IsQuestFiltered(questID) then
 				WQchannel = "WQP"..questID
 				if C_PvP.IsWarModeActive() then
 					WQchannel = WQchannel.."PVP"
