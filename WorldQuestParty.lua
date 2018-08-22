@@ -10,6 +10,21 @@ local parties = {}
 local isRegistered = false
 local joinButtonTimer = nil
 local isAwaitingInvite = false
+local IgnoreWQ = { -- Ignored WQ IDs (Can probably lift this into a SavedVar once config is done...?)
+	-- Supplies Needed (BFA)
+	51024, 51038, 51027, 51041, 51032, 51048, 51040, 51026, 52378, 52385, 51037, 51023,
+	51043, 51031, 51047, 51034, 51050, 52384, 52377, 51025, 51039, 51017, 51042, 52379,
+	51036, 51022, 52376, 52383, 51028, 51044, 51045, 51029, 51030, 51046, 51051, 52380, 
+	52375, 52382, 52388, 52381, 51049, 51033, 52387, 52386, 51021, 51035
+}
+local function IsQuestIgnored(questID)
+	for i,v in ipairs(IgnoreWQ) do
+		if (v == questID) then
+			return true
+		end
+	end
+	return false
+end
 
 function WQPFrame.DebugPrint(msg)
 	if (DEBUG) then
@@ -196,11 +211,11 @@ end
 local function IsQuestFiltered(questID)
 	local wqName, wqFaction = C_TaskQuest.GetQuestInfoByQuestID(questID)
 	local wqDesc = GetQuestObjectiveInfo(questID, 1, true)
-	if wqName:match("Supplies Needed") or wqName:match("Work Order") or wqFaction == 2163 or wqDesc:match("Defeat") then
+	local wqType = select(3, GetQuestTagInfo(questID))
+	if wqType == LE_QUEST_TAG_TYPE_PROFESSION or wqType == LE_QUEST_TAG_TYPE_PET_BATTLE or wqType == LE_QUEST_TAG_TYPE_DUNGEON then
 		return true
 	end
-	-- TODO: Custom quest filtering?
-	return false
+	return IsQuestIgnored(questID)
 end
 
 local function CheckIfCurrentLocIsWQ()
@@ -237,7 +252,7 @@ end
 function RegEvents:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
 	RemoveAllWQPChannels()
 	WQPFrame.ExitWQ()
-	C_Timer.After(2, function()
+	C_Timer.After(10, function()
 		CheckIfCurrentLocIsWQ()
 	end)
 end
@@ -377,9 +392,8 @@ function WQPFrame.HookEvents()
 			local questName = C_TaskQuest.GetQuestInfoByQuestID(activeWQ)
 			local questLink = GetQuestLink(activeWQ)
 			local msg = string.format(_L["LFM"], questLink)
-			local generalChannelNum = GetChannelName("General - "..GetZoneText())
 			if not DEBUG then
-				SendChatMessage(msg, "CHANNEL", nil, generalChannelNum)
+				SendChatMessage(msg, "CHANNEL", nil, 1)
 			else
 				SendChatMessage(msg, "WHISPER", nil, UnitName("player"))
 				SendChatMessage("wq", "WHISPER", nil, UnitName("player"))
