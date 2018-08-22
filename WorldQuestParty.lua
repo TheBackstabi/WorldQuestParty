@@ -212,7 +212,7 @@ local function IsQuestFiltered(questID)
 	local wqName, wqFaction = C_TaskQuest.GetQuestInfoByQuestID(questID)
 	local wqDesc = GetQuestObjectiveInfo(questID, 1, true)
 	local wqType = select(3, GetQuestTagInfo(questID))
-	if wqType == LE_QUEST_TAG_TYPE_PROFESSION or wqType == LE_QUEST_TAG_TYPE_PET_BATTLE or wqType == LE_QUEST_TAG_TYPE_DUNGEON then
+	if wqFaction == 2163 or wqType == LE_QUEST_TAG_TYPE_PROFESSION or wqType == LE_QUEST_TAG_TYPE_PET_BATTLE or wqType == LE_QUEST_TAG_TYPE_DUNGEON then
 		return true
 	end
 	return IsQuestIgnored(questID)
