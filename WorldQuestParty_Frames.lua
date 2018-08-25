@@ -1,6 +1,6 @@
 WQPFrame.JoinFrame = CreateFrame("Frame", "WQPJoinFrame", WQPFrame)
 WQPFrame.HeaderFrame = CreateFrame("Frame", "WQPHeaderFrame", WQPFrame)
-FrameLoc = { --SavedVar
+WQPartyVars.FrameLoc = { --SavedVar
 	point = "BOTTOMLEFT",
 	relativeTo = "WQPFrame",
 	relativePoint = "BOTTOMLEFT",
@@ -32,8 +32,8 @@ local function SetFrameAnchors()
 	WQPFrame:SetSize(UIParent:GetSize())
 	local frame = WQPFrame.HeaderFrame
 	frame:ClearAllPoints()
-	--if FrameLoc then
-		frame:SetPoint(FrameLoc.point, FrameLoc.relativeTo, FrameLoc.relativePoint, FrameLoc.x, FrameLoc.y)
+	--if WQPartyVars.FrameLoc then
+		frame:SetPoint(WQPartyVars.FrameLoc.point, WQPartyVars.FrameLoc.relativeTo, WQPartyVars.FrameLoc.relativePoint, WQPartyVars.FrameLoc.x, WQPartyVars.FrameLoc.y)
 	--else
 	--	frame:SetPoint("LEFT", WQPFrame, "LEFT", 200, 0)
 	--end
@@ -172,7 +172,7 @@ function WQPFrame.CreateSubFrames(_L)
 	WQPFrame.HeaderFrame:SetScript("OnDragStart", WQPFrame.HeaderFrame.StartMoving)
 	WQPFrame.HeaderFrame:SetScript("OnDragStop", function()
 		WQPFrame.HeaderFrame:StopMovingOrSizing()
-		FrameLoc.point, FrameLoc.relativeTo, FrameLoc.relativePoint, FrameLoc.x, FrameLoc.y = WQPFrame.HeaderFrame:GetPoint(1)
+		WQPartyVars.FrameLoc.point, WQPartyVars.FrameLoc.relativeTo, WQPartyVars.FrameLoc.relativePoint, WQPartyVars.FrameLoc.x, WQPartyVars.FrameLoc.y = WQPFrame.HeaderFrame:GetPoint(1)
 	end)
 	
 	JoinFrame_JoinButton()

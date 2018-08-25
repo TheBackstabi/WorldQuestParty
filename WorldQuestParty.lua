@@ -1,3 +1,12 @@
+WQPartyVars = {
+	channel = 1,
+	sendPartyMessage = true,
+	customPartyMessage = "",
+	automaticLFM = false,
+	LFMchannel = 1,
+	leavePartyPrompt = true
+}
+--WQPAce = LibStub("AceAddon-3.0"):NewAddon("WorldQuestParty", "AceConfig-3.0")
 local DEBUG = false 
 local AddonMessageChannel = "WQPartyFinder"
 local _L = {}
@@ -5,7 +14,7 @@ WQPFrame = CreateFrame("Frame", "WorldQuestPartyFrame", UIParent)
 local activeWQ = nil
 local recentWQ = {}
 local WQchannel = nil
-local channelNum = nil
+local WQchannelNum = nil
 local parties = {}
 local isRegistered = false
 local joinButtonTimer = nil
@@ -33,6 +42,7 @@ function WQPFrame.DebugPrint(msg)
 end
 
 local RegEvents = {}
+
 WQPFrame:SetScript("OnEvent", function(self, event, ...)
 	if (RegEvents[event]) then
 		return RegEvents[event](self, event, ...)
@@ -66,15 +76,15 @@ local function GetUnitGroupIndex(name)
 	local index = name:find("-")
 	if index and index > 0 then
 		name = string.sub(name, 1, index-1)
-		for i=1,4 do
-			if UnitName("party"..i) == name then
-				return "party"..i
-			end
+	end
+	for i=1,4 do
+		if UnitName("party"..i) == name then
+			return "party"..i
 		end
-		for i=1,40 do
-			if UnitName("raid"..i) == name then
-				return "raid"..i
-			end
+	end
+	for i=1,40 do
+		if UnitName("raid"..i) == name then
+			return "raid"..i
 		end
 	end
 	return false
@@ -95,7 +105,7 @@ local function CreateJoinButton()
 	WQPFrame.JoinFrame.JoinButton:Show()
 end
 
-function RegEvents:CHAT_MSG_ADDON(self, prefix, msg, channel, sender, senderNoRealm)
+function RegEvents:CHAT_MSG_ADDON(self, prefix, msg, channel, sender)
 	WQPFrame.DebugPrint(string.format("Message received from %s on %s - \"%s\"", sender, channel, msg))
 	if DEBUG or not string.find(sender, UnitName("player")) then
 		if msg == ">" and isRegistered then
@@ -110,7 +120,8 @@ function RegEvents:CHAT_MSG_ADDON(self, prefix, msg, channel, sender, senderNoRe
 				end
 				CreateJoinButton()
 			else
-				local index = GetUnitGroupIndex(senderNoRealm)
+				print('asdf');
+				local index = GetUnitGroupIndex(sender)
 				if index and UnitIsGroupLeader(index) then
 					WQPFrame.DebugPrint("Your party was listed by the party leader")
 					WQPFrame.JoinFrame.ListButton:SetText(_L["LISTED"]) --"Party Listed..."
@@ -124,7 +135,7 @@ function RegEvents:CHAT_MSG_ADDON(self, prefix, msg, channel, sender, senderNoRe
 				WQPFrame.DebugPrint("Removing "..sender.."'s party from table")
 				parties[sender] = nil
 			else
-				local index = GetUnitGroupIndex(senderNoRealm)
+				local index = GetUnitGroupIndex(sender)
 				if index and UnitIsGroupLeader(index) then
 					WQPFrame.DebugPrint("Your party was delisted by the party leader")
 					WQPFrame.JoinFrame.ListButton:SetText(_L["UNLISTED"]) --"Party Not Listed..."
@@ -158,24 +169,30 @@ end
 
 function RegEvents:GROUP_ROSTER_UPDATE(self)
 	if activeWQ and UnitInParty("player") then
-		if UnitIsGroupLeader("player") then
+		if UnitIsGroupLeader("player") and isRegistered then
 			WQPFrame.SetAsParty(true)
 			local maxPartySize = 5
 			if (IsInRaid("player")) then
 				maxPartySize = 40
 			end
 			if (GetNumGroupMembers() == maxPartySize) then
-				C_ChatInfo.SendAddonMessage(AddonMessageChannel, "?", "CHANNEL", channelNum)
+				C_ChatInfo.SendAddonMessage(AddonMessageChannel, "?", "CHANNEL", WQchannelNum)
 				WQPFrame.JoinFrame.ListButton:SetText(_L["FULL"])
 				WQPFrame.JoinFrame.ListButton:Disable()
 				isRegistered = false
 			else
-				C_ChatInfo.SendAddonMessage(AddonMessageChannel, "<", "CHANNEL", channelNum)
+				C_ChatInfo.SendAddonMessage(AddonMessageChannel, "<", "CHANNEL", WQchannelNum)
 				WQPFrame.JoinFrame.ListButton:SetText(_L["DELIST"])
 				WQPFrame.JoinFrame.ListButton:Enable()
 				isRegistered = true
 			end
+		elseif UnitIsGroupLeader("player") then
+			WQPFrame.JoinFrame.ListButton:SetText(_L["ENLIST"])
+			WQPFrame.SetAsParty(true)
 		else
+			if isRegistered then
+				C_ChatInfo.SendAddonMessage(AddonMessageChannel, "?", "CHANNEL", WQchannelNum)
+			end
 			isRegistered = false
 			C_ChatInfo.SendAddonMessage(AddonMessageChannel, "@", "PARTY")
 			WQPFrame.SetAsParty(false)
@@ -188,12 +205,44 @@ end
 function RegEvents:QUEST_TURNED_IN(event, questID, experience, money)
 	if activeWQ and questID == activeWQ then
 		if UnitInParty("player") or UnitIsGroupLeader("player") then
-			local questLink = GetQuestLink(activeWQ)
-			SendChatMessage(string.format(_L["COMPLETE"], questLink), "PARTY")
-			StaticPopup_Show("WQP_LEAVEPARTY")
+			if (WQPartyVars.sendPartyMessage) then
+				local questLink = GetQuestLink(activeWQ)
+				local message = _L["COMPLETE"]
+				if (WQPartyVars.customPartyMessage ~= "") then
+					message = WQPartyVars.customPartyMessage
+				end
+				SendChatMessage(string.format(message, questLink), "PARTY")
+			end
+			if (WQPartyVars.leavePartyPrompt) then
+				StaticPopup_Show("WQP_LEAVEPARTY")
+			end
 		end
 		WQPFrame.ExitWQ()
 	end
+end
+
+local function TimerCountdown(button, text, timeRemaining)
+	button:SetText(text.." ("..timeRemaining.."s)")
+	button:SetNormalFontObject("GameFontNormal")
+	return C_Timer.NewTimer(1, function()
+		timeRemaining = timeRemaining - 1
+		if timeRemaining > 0 then
+			TimerCountdown(button, text, timeRemaining)
+		end
+	end)
+end
+
+local function ButtonThrottle(button, duration, callback, dontEnable)
+	local text = button:GetText()
+	button:Disable()
+	local timer = C_Timer.NewTimer(duration, function()
+		if not dontEnable then
+			button:Enable()
+		end
+		if callback then callback() end
+	end)
+	timer.Countdown = TimerCountdown(button, text, duration)
+	return timer
 end
 
 function RegEvents:PARTY_INVITE_REQUEST()
@@ -201,10 +250,10 @@ function RegEvents:PARTY_INVITE_REQUEST()
 		WQPFrame.DebugPrint("Auto-accepting invite")
 		AcceptGroup()
 		isAwaitingInvite = false
-		WQPFrame.JoinFrame.ListButton:SetText(_L["WAITING"])
-		ButtonThrottle(WQPFrame.JoinFrame.ListButton, 3, function(self)
-			C_ChatInfo.SendAddonMessage(AddonMessageChannel, "@", "PARTY")
-		end, true)
+		--WQPFrame.JoinFrame.ListButton:SetText(_L["WAITING"])
+		--ButtonThrottle(WQPFrame.JoinFrame.ListButton, 3, function(self)
+		--	C_ChatInfo.SendAddonMessage(AddonMessageChannel, "@", "PARTY")
+		--end, true)
 	end
 end
 
@@ -252,9 +301,14 @@ end
 function RegEvents:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
 	RemoveAllWQPChannels()
 	WQPFrame.ExitWQ()
-	C_Timer.After(10, function()
+	WQPFrame:RegisterEvent("CHANNEL_UI_UPDATE");
+end
+
+function RegEvents:CHANNEL_UI_UPDATE()
+	C_Timer.After(5, function()
 		CheckIfCurrentLocIsWQ()
 	end)
+	WQPFrame:UnregisterEvent("CHANNEL_UI_UPDATE");
 end
 
 for k, v in pairs(RegEvents) do
@@ -266,30 +320,6 @@ local function SetupRecentWQFlush()
 		recentWQ = {}
 		SetupRecentWQFlush()
 	end)
-end
-
-local function TimerCountdown(button, text, timeRemaining)
-	button:SetText(text.." ("..timeRemaining.."s)")
-	button:SetNormalFontObject("GameFontNormal")
-	return C_Timer.NewTimer(1, function()
-		timeRemaining = timeRemaining - 1
-		if timeRemaining > 0 then
-			TimerCountdown(button, text, timeRemaining)
-		end
-	end)
-end
-
-local function ButtonThrottle(button, duration, callback, dontEnable)
-	local text = button:GetText()
-	button:Disable()
-	local timer = C_Timer.NewTimer(duration, function()
-		if not dontEnable then
-			button:Enable()
-		end
-		if callback then callback() end
-	end)
-	timer.Countdown = TimerCountdown(button, text, duration)
-	return timer
 end
 
 local function IsRecentWQ(questID)
@@ -352,8 +382,9 @@ function WQPFrame.HookEvents()
 		if joinButtonTimer then CancelTimer(joinButtonTimer) end
 		WQPFrame.SetAsParty(true)
 		WQPFrame.JoinFrame.ListButton:Click()
-		-- TODO: Config for enabling this
-		--WQPFrame.JoinFrame.CalloutButton:Click()
+		if (WQPartyVars.automaticLFM) then
+			WQPFrame.JoinFrame.CalloutButton:Click()
+		end
 	end)
 	
 	WQPFrame.HeaderFrame.CloseButton:SetScript("OnClick", function(self)
@@ -365,7 +396,7 @@ function WQPFrame.HookEvents()
 		if isRegistered then
 			WQPFrame.DebugPrint("Removing group from listing")
 			isRegistered = false
-			C_ChatInfo.SendAddonMessage(AddonMessageChannel, "?", "CHANNEL", channelNum)
+			C_ChatInfo.SendAddonMessage(AddonMessageChannel, "?", "CHANNEL", WQchannelNum)
 			self:SetText(_L["ENLIST"])
 			ButtonThrottle(self, 3, function()
 				self:SetText(_L["ENLIST"])
@@ -379,7 +410,7 @@ function WQPFrame.HookEvents()
 		else
 			WQPFrame.DebugPrint("Adding group to listing")
 			isRegistered = true
-			C_ChatInfo.SendAddonMessage(AddonMessageChannel, "<", "CHANNEL", channelNum)
+			C_ChatInfo.SendAddonMessage(AddonMessageChannel, "<", "CHANNEL", WQchannelNum)
 			self:SetText(_L["DELIST"])
 			ButtonThrottle(self, 3, function()
 				self:SetText(_L["DELIST"])
@@ -393,12 +424,16 @@ function WQPFrame.HookEvents()
 			local questLink = GetQuestLink(activeWQ)
 			local msg = string.format(_L["LFM"], questLink)
 			if not DEBUG then
-				SendChatMessage(msg, "CHANNEL", nil, 1)
+				if (WQPartyVars.channel == "Say" or WQPartyVars.channel == "Yell") then
+					SendChatMessage(msg, WQPartyVars.channel)
+				else
+					SendChatMessage(msg, "CHANNEL", nil, tonumber(strsub(WQPartyVars.channel,1,1)))
+				end
 			else
 				SendChatMessage(msg, "WHISPER", nil, UnitName("player"))
 				SendChatMessage("wq", "WHISPER", nil, UnitName("player"))
 			end
-			ButtonThrottle(WQPFrame.JoinFrame.CalloutButton, 30, function()
+			ButtonThrottle(WQPFrame.JoinFrame.CalloutButton, 60, function()
 				WQPFrame.JoinFrame.CalloutButton:SetText(_L["POST"])
 			end)
 		end
@@ -438,6 +473,7 @@ function WQPFrame.SetAsParty(isLeader)
 		WQPFrame.JoinFrame.LeaveButton:Show()
 		WQPFrame.JoinFrame.ListButton:Disable()
 		WQPFrame.JoinFrame.ListButton:SetText(_L["WAITING"])
+		C_ChatInfo.SendAddonMessage(AddonMessageChannel, "@", "PARTY")
 	end
 end
 
@@ -449,7 +485,7 @@ function WQPFrame.SetAsIndividual()
 	WQPFrame.JoinFrame.CalloutButton:Hide()
 	WQPFrame.JoinFrame.LeaveButton:Hide()
 	
-	C_ChatInfo.SendAddonMessage(AddonMessageChannel, ">", "CHANNEL", channelNum)
+	C_ChatInfo.SendAddonMessage(AddonMessageChannel, ">", "CHANNEL", WQchannelNum)
 	WQPFrame.JoinFrame.JoinButton:SetText(_L["SEARCHING"])
 	WQPFrame.JoinFrame.JoinButton:SetNormalFontObject("GameFontNormal")
 	if joinButtonTimer then
@@ -461,7 +497,7 @@ function WQPFrame.SetAsIndividual()
 end
 
 local function GetChannelNumber(channelName)
-	channelNum = GetChannelName(channelName)
+	WQchannelNum = GetChannelName(channelName)
 end
 
 function WQPFrame.EnterWQ(questID)
@@ -502,13 +538,13 @@ end
 function WQPFrame.ExitWQ()
 	if (activeWQ ~= nil) then
 		WQPFrame.DebugPrint(string.format("Exiting WQ %s", activeWQ))
-		C_ChatInfo.SendAddonMessage(AddonMessageChannel, "?", "CHANNEL", channelNum)
+		C_ChatInfo.SendAddonMessage(AddonMessageChannel, "?", "CHANNEL", WQchannelNum)
 		RemoveAllWQPChannels()
 		LeaveChannelByName(WQchannel)
 		table.insert(recentWQ, activeWQ)
 		activeWQ = nil
 		WQchannel = nil
-		channelNum = nil
+		WQchannelNum = nil
 		parties = {}
 		isRegistered = false
 		if joinButtonTimer then
@@ -533,8 +569,9 @@ SlashCmdList["WQP"] = function(msg)
 			CheckIfCurrentLocIsWQ()
 		end)
 		print(_L["RESET"])
-	--elseif (msg == "debug") then
-	--	DEBUG = true
+	elseif (msg == "config") then
+		InterfaceOptionsFrame_OpenToCategory("World Quest Party")
+		InterfaceOptionsFrame_OpenToCategory("World Quest Party") -- Run twice because WoW is weird.
 	else
 		print(_L["SLASH"])
 	end
