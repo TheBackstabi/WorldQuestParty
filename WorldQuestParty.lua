@@ -298,17 +298,22 @@ local function RemoveAllWQPChannels()
 	end
 end
 
-function RegEvents:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
+function RegEvents:PLAYER_ENTERING_WORLD(self, isInitialLogin, isReloadingUi)
 	RemoveAllWQPChannels()
 	WQPFrame.ExitWQ()
+	RegEvents.isInitialLogin = isInitialLogin
 	WQPFrame:RegisterEvent("CHANNEL_UI_UPDATE");
-	
+	if not isInitialLogin then
+		WQPOptionsPane.Setup()
+	end
 end
 
 function RegEvents:CHANNEL_UI_UPDATE()
-	C_Timer.After(1, function()
-		WQPOptionsPane.Setup()
-	end)
+	if (RegEvents.isInitialLogin) then
+		C_Timer.After(1, function()
+			WQPOptionsPane.Setup()
+		end)
+	end
 	C_Timer.After(5, function()
 		CheckIfCurrentLocIsWQ()
 	end)
@@ -428,10 +433,12 @@ function WQPFrame.HookEvents()
 			local questLink = GetQuestLink(activeWQ)
 			local msg = string.format(_L["LFM"], questLink)
 			if not DEBUG then
-				if (WQPartyVars.channel == "Say" or WQPartyVars.channel == "Yell") then
-					SendChatMessage(msg, WQPartyVars.channel)
+				if (WQPartyVars.LFMchannel == -1) then
+					SendChatMessage(msg, "SAY")
+				elseif (WQPartyVars.LFMchannel == 0) then
+					SendChatMessage(msg, "YELL")
 				else
-					SendChatMessage(msg, "CHANNEL", nil, tonumber(strsub(WQPartyVars.channel,1,1)))
+					SendChatMessage(msg, "CHANNEL", nil, WQPartyVars.LFMchannel)
 				end
 			else
 				SendChatMessage(msg, "WHISPER", nil, UnitName("player"))

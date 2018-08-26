@@ -6,7 +6,7 @@ local function BuildChannelList()
 	for i=1,chanCount do
 		local channel, isHeader, _, num = GetChannelDisplayInfo(i)
 		if num and not isHeader then
-			tab[i] = num..". "..channel
+			tab[num] = num..". "..channel
 			addCount = addCount + 1
 		end
 	end
@@ -67,7 +67,7 @@ function WQPOptionsPane.Setup()
 				name = "LFM Channel",
 				desc = "What channel number to send your LFM post to.",
 				type = "select",
-				set = function(info, val) WQPartyVars.LFMchannel = val end,
+				set = function(info, val) print(val); WQPartyVars.LFMchannel = val end,
 				get = function(info) return WQPartyVars.LFMchannel end,
 				values = BuildChannelList(),
 				style = "dropdown"
@@ -77,4 +77,4 @@ function WQPOptionsPane.Setup()
 	LibStub("AceConfig-3.0"):RegisterOptionsTable("World Quest Party Options", OptionsTable, nil)
 	LibStub("AceConfigDialog-3.0"):AddToBlizOptions("World Quest Party Options", "World Quest Party", nil)
 end
-WQPOptionsPane.Setup()
+--WQPOptionsPane.Setup()
