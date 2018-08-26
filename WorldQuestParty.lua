@@ -303,13 +303,13 @@ function RegEvents:PLAYER_ENTERING_WORLD(self, isInitialLogin, isReloadingUi)
 	WQPFrame.ExitWQ()
 	RegEvents.isInitialLogin = isInitialLogin
 	WQPFrame:RegisterEvent("CHANNEL_UI_UPDATE");
-	if not isInitialLogin then
+	if not isInitialLogin and isReloadingUi then
 		WQPOptionsPane.Setup()
 	end
 end
 
 function RegEvents:CHANNEL_UI_UPDATE()
-	if (RegEvents.isInitialLogin) then
+	if (RegEvents.isInitialLogin == true) then
 		C_Timer.After(1, function()
 			WQPOptionsPane.Setup()
 		end)
