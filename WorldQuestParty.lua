@@ -302,9 +302,13 @@ function RegEvents:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
 	RemoveAllWQPChannels()
 	WQPFrame.ExitWQ()
 	WQPFrame:RegisterEvent("CHANNEL_UI_UPDATE");
+	
 end
 
 function RegEvents:CHANNEL_UI_UPDATE()
+	C_Timer.After(1, function()
+		WQPOptionsPane.Setup()
+	end)
 	C_Timer.After(5, function()
 		CheckIfCurrentLocIsWQ()
 	end)
