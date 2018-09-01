@@ -120,7 +120,6 @@ function RegEvents:CHAT_MSG_ADDON(self, prefix, msg, channel, sender)
 				end
 				CreateJoinButton()
 			else
-				print('asdf');
 				local index = GetUnitGroupIndex(sender)
 				if index and UnitIsGroupLeader(index) then
 					WQPFrame.DebugPrint("Your party was listed by the party leader")
